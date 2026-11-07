@@ -60,5 +60,16 @@ public class StudyBuddy {
         return message;
     }
 
+      // get mascot image path
+    public String getImagePath() {
+        String folder = "assets/mascot/" + characterType + "/";
+        String fileName = expression;
+
+        if (characterType.equalsIgnoreCase("male")) {
+            fileName += " M";
+        }
+
+        return folder + fileName + ".png";
+    }
 }
 
