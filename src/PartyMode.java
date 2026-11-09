@@ -1,3 +1,4 @@
+package quiz;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -20,9 +21,9 @@ public class PartyMode {
     public String getCurrentPlayer() {
         return playerNames.get(currentPlayerIndex);
     }
-    public boolean submitTurn(int optionIndex) {
+    public boolean submitTurn(String userAnswer) {
         String currentPlayer = getCurrentPlayer();
-        boolean isCorrect = sharedQuiz.submitAnswer(optionIndex);
+        boolean isCorrect = sharedQuiz.submitAnswer(userAnswer);
 
         if (isCorrect) {
             int currentScore = playerScores.get(currentPlayer);
@@ -34,7 +35,7 @@ public class PartyMode {
     public HashMap<String, Integer> getPlayerScores() {
         return playerScores;
     }
-    public Quiz getShardQuiz() {
+    public Quiz getSharedQuiz() {
         return sharedQuiz;
     }
 }

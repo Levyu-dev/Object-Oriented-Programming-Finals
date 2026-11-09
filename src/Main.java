@@ -1,3 +1,4 @@
+package quiz;
 import java.util.ArrayList;
 
 public class Main {
@@ -5,10 +6,10 @@ public class Main {
         System.out.println("Updated questions using gab's ");
 
         //THE QUESTIONS
-        ArrayList<Question> quizBank = new ArrayList<>();
-        quizBank.add(new MultipleChoiceQuestion("A method that calculates and returns a value"., new String[] {"A) Void Method", "B) Value returning method", "C) User Defined Method", "D) Equivalent Method"},"B"));
+        ArrayList<Questions> quizBank = new ArrayList<>();
+        quizBank.add(new MultipleChoiceQuestion("A method that calculates and returns a value.", new String[] {"A) Void Method", "B) Value returning method", "C) User Defined Method", "D) Equivalent Method"},"B"));
         quizBank.add(new IdentificationQuestions("What does Polymorphism mean?", "Many forms"));
-        quizBank.add(new CodeOutputQuestions("Class low { low() {System.out.println(1); }}/n class High extends low { High() {System.out.println(2); }}/n low obj = new High();", "12"));
+        quizBank.add(new CodeOutputQuestions("Class low { low() {System.out.println(1); }}/n class High extends low { High() {System.out.println(2); }}\n low obj = new High();", "12"));
 
         //testing base quiz with gabs part
         System.out.println("Testing base Quiz engine");

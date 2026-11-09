@@ -1,3 +1,4 @@
+package quiz;
 import java.util.ArrayList;
 
 public class FinalBossChallenge extends Quiz {
@@ -8,7 +9,7 @@ public class FinalBossChallenge extends Quiz {
     private int damageToBoss = 20;
     private int damageToPlayer = 15;
 
-    public FinalBossChallenge(ArrayList<Question> questions, int bossHp, int playerHp) {
+    public FinalBossChallenge(ArrayList<Questions> questions, int bossHp, int playerHp) {
         super(questions);
         this.bossMaxHp = bossHp;
         this.bossCurrentHp = bossHp;
@@ -17,8 +18,8 @@ public class FinalBossChallenge extends Quiz {
     }
 
     @Override
-    public boolean submitAnswer(int optionIndex) {
-        boolean isCorrect = super.submitAnswer(optionIndex);
+    public boolean submitAnswer(String userAnswer) {
+        boolean isCorrect = super.submitAnswer(userAnswer);
 
         if (isCorrect) {
             bossCurrentHp -= damageToBoss;

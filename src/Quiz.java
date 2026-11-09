@@ -1,3 +1,4 @@
+package quiz;
 import java.util.ArrayList;
 
 public class Quiz {
@@ -18,21 +19,17 @@ public class Quiz {
     }
 
     public boolean isFinished() {
-        return currentQuestionIndex >= questions.size();
-    }
-
-    public boolean submitAnswer(String userAnswer) {
         if (isFinished()) {
-            throw new InvalidQuizSubmissionException("Quiz is already finished.");
+            return null;
         }
+          return questions.get(currentQuestionIndex);
+    }
+    public boolean isFinished() {
+        return currentQuestionIndex >= questions.size();
+    } 
 
-        Questions currentQuestion = getCurrentQuestion();
-
-        if (optionIndex < 0 || optionIndex >= currentQuestion.getOptions().length) {
-            throw new InvalidQuizSubmissionException("Invalid option index: " + optionIndex);
-        }
-
-        boolean isCorrect = currentQuestion.checkAnswer(optionIndex);
+    Questions currentQuestions = getCurrentQuestion();
+    boolean isCorrect = currentQuestion.checkAnswer(userAnswer);
 
         if (isCorrect) {
             score += 10;

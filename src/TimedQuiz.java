@@ -1,10 +1,11 @@
+package quiz;
 import java.util.ArrayList;
 
 public class TimedQuiz extends Quiz {
     private int timeLimitSeconds;
     private long questionStartTime;
 
-    public TimedQuiz(ArrayList<Question> questions, int timelimitSeconds) {
+    public TimedQuiz(ArrayList<Questions> questions, int timelimitSeconds) {
         super(questions);
         this.timeLimitSeconds = timeLimitSeconds;
         this.questionStartTime = System.currentTimeMillis();
@@ -15,7 +16,7 @@ public class TimedQuiz extends Quiz {
     }
        
     @Override 
-    public boolean submitAnswer(int optionIndex) {
+    public boolean submitAnswer(String userAnswer) {
         long currentTime = System.currentTimeMillis();
         long secondsElapsed = (currentTime - questionStartTime) / 1000;
 
@@ -26,7 +27,7 @@ public class TimedQuiz extends Quiz {
             }
             throw new InvalidQuizSubmissionException(" YOU time is Expired You took " + secondsElapsed + " seconds. ");
         }
-        boolean isCorrect = super.submitAnswer(optionIndex);
+        boolean isCorrect = super.submitAnswer(userAnswer);
         if (!isFinished()) {
             startTimer();
         }
