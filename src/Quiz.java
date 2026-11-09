@@ -1,19 +1,19 @@
 import java.util.ArrayList;
 
 public class Quiz {
-    protected ArrayList<Question> questions;
+    protected ArrayList<Questions> questions;
     protected int currentQuestionIndex;
     protected int score;
     protected int correctAnswersCount;
     
-    public Quiz(ArrayList<Question> questions) {
+    public Quiz(ArrayList<Questions> questions) {
         this.questions = questions;
         this.currentQuestionIndex = 0;
         this.score = 0;
         this.correctAnswersCount = 0;
     }
 
-    public Question getCurrentQuestion() {
+    public Questions getCurrentQuestion() {
         return questions.get(currentQuestionIndex);
     }
 
@@ -21,12 +21,12 @@ public class Quiz {
         return currentQuestionIndex >= questions.size();
     }
 
-    public boolean submitAnswer(int optionIndex) {
+    public boolean submitAnswer(String userAnswer) {
         if (isFinished()) {
             throw new InvalidQuizSubmissionException("Quiz is already finished.");
         }
 
-        Question currentQuestion = getCurrentQuestion();
+        Questions currentQuestion = getCurrentQuestion();
 
         if (optionIndex < 0 || optionIndex >= currentQuestion.getOptions().length) {
             throw new InvalidQuizSubmissionException("Invalid option index: " + optionIndex);
