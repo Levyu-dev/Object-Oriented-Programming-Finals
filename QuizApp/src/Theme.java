@@ -1,5 +1,4 @@
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class Theme {
@@ -30,14 +29,13 @@ public class Theme {
         return btn;
     }
 
-    // Draws a true circular white button like Page 4 of your slides
     public static JButton createCircleButton(String label, String tooltip) {
         JButton btn = new JButton(label) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getModel().isRollover() ? new Color(245, 245, 245) : WHITE);
+                g2.setColor(WHITE);
                 g2.fillOval(0, 0, getWidth() - 1, getHeight() - 1);
                 g2.dispose();
                 super.paintComponent(g);
@@ -45,7 +43,7 @@ public class Theme {
         };
         btn.setPreferredSize(new Dimension(54, 54));
         btn.setMaximumSize(new Dimension(54, 54));
-        btn.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btn.setFont(new Font("SansSerif", Font.BOLD, 11));
         btn.setForeground(TEXT_DARK);
         btn.setToolTipText(tooltip);
         btn.setContentAreaFilled(false);
@@ -56,7 +54,6 @@ public class Theme {
         return btn;
     }
 
-    // Custom Progress Bar for XP and Course Progress
     public static JProgressBar createProgressBar(int value, int max, Color fill, Color track) {
         JProgressBar bar = new JProgressBar(0, max);
         bar.setValue(value);

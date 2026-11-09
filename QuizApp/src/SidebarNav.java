@@ -4,41 +4,46 @@ import java.awt.*;
 
 public class SidebarNav extends JPanel {
 
-    public SidebarNav(ApplicationController controller) {
+    public SidebarNav(ApplicationController controller, boolean isTeacher) {
         setBackground(Theme.BG_YELLOW);
         setPreferredSize(new Dimension(85, 0));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(new EmptyBorder(25, 10, 25, 10));
 
-        // 6 Circular Navigation Buttons matching Page 4 of your slides
-        JButton homeBtn = Theme.createCircleButton("Home", "Dashboard");
-        homeBtn.addActionListener(e -> controller.showAppScreen("DASHBOARD"));
+        if (isTeacher) {
+            // TEACHER-ONLY NAVIGATION (No Student screens here)
+            JButton dashBtn = Theme.createCircleButton("Dash", "Teacher Dashboard");
+            dashBtn.addActionListener(e -> controller.showTeacherScreen("TEACHER_DASH"));
 
-        JButton practiceBtn = Theme.createCircleButton("Prac", "Practice Mode");
-        practiceBtn.addActionListener(e -> controller.showAppScreen("PRACTICE"));
+            JButton assignBtn = Theme.createCircleButton("Assign", "Manage Assignments");
+            assignBtn.addActionListener(e -> controller.showTeacherScreen("TEACHER_CLASS"));
 
-        JButton gameBtn = Theme.createCircleButton("Game", "Game Modes");
-        gameBtn.addActionListener(e -> controller.showAppScreen("GAME_MODE"));
+            add(dashBtn);
+            add(Box.createVerticalStrut(18));
+            add(assignBtn);
+        } else {
+            // STUDENT-ONLY NAVIGATION (No Teacher screens here)
+            JButton homeBtn = Theme.createCircleButton("Home", "Student Dashboard");
+            homeBtn.addActionListener(e -> controller.showStudentScreen("STUDENT_DASH"));
 
-        JButton buddyBtn = Theme.createCircleButton("Bot", "Study Buddy");
-        buddyBtn.addActionListener(e -> controller.showAppScreen("STUDY_BUDDY"));
+            JButton practiceBtn = Theme.createCircleButton("Prac", "Practice");
+            practiceBtn.addActionListener(e -> controller.showStudentScreen("PRACTICE"));
 
-        JButton statsBtn = Theme.createCircleButton("XP", "Student Progress");
-        statsBtn.addActionListener(e -> controller.showAppScreen("DASHBOARD"));
+            JButton classBtn = Theme.createCircleButton("Class", "My Classroom");
+            classBtn.addActionListener(e -> controller.showStudentScreen("STUDENT_CLASS"));
 
-        JButton exitBtn = Theme.createCircleButton("Exit", "Back to Start");
-        exitBtn.addActionListener(e -> controller.showRootScreen("WELCOME"));
+            add(homeBtn);
+            add(Box.createVerticalStrut(18));
+            add(practiceBtn);
+            add(Box.createVerticalStrut(18));
+            add(classBtn);
+        }
 
-        add(homeBtn);
-        add(Box.createVerticalStrut(18));
-        add(practiceBtn);
-        add(Box.createVerticalStrut(18));
-        add(gameBtn);
-        add(Box.createVerticalStrut(18));
-        add(buddyBtn);
-        add(Box.createVerticalStrut(18));
-        add(statsBtn);
+        // Logout button at bottom returns to Welcome Screen
+        JButton logoutBtn = Theme.createCircleButton("Exit", "Logout");
+        logoutBtn.addActionListener(e -> controller.logout());
+
         add(Box.createVerticalGlue());
-        add(exitBtn);
+        add(logoutBtn);
     }
 }
