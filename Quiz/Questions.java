@@ -17,13 +17,12 @@ abstract class Questions{
     //Abstract operation
     abstract void showQuestions();
     
-    //
+    //Boolean Constructor that checks the answer if it's correct or not
     boolean askQuestions (Scanner input) {
         showQuestions();
         System.out.println("Enter your answer: ");
         String userAnswer = input.nextLine();
 
-        //Checks the answer
         if (checkAnswer(userAnswer)) {
             System.out.println("Correct!");
             return true;
@@ -35,11 +34,13 @@ abstract class Questions{
         } 
     }
 
-    //
+    //Ignores the case difference in scanner inputs
     protected boolean checkAnswer (String userAnswer) {
         return userAnswer.equalsIgnoreCase(correctAnswer);
     }
 }
+
+//Sub classes for every type of questions using overriding
 
 class MultipleChoiceQuestions extends Questions {
     private String[] choices;
@@ -100,9 +101,5 @@ class DebuggingQuestions extends Questions {
     @Override
     void showQuestions() {
         System.out.println("\n[DEBUGGING] Find the errors present in the code and enter the right or missing code.\n" + questionText);
-    }
-
-    public static void main(String[] args) {
-        
     }
 }

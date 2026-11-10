@@ -5,6 +5,8 @@ import java.util.*;
 public class QuizGenerator {
     public static void main(String[] args) {
         Scanner input = new Scanner (System.in);
+        
+        //An array list for the predetermined questions
         List<Questions> quizBank = new ArrayList<>();
 
         quizBank.add(new MultipleChoiceQuestions("A method that calculates and returns a value.", new String[] {"A) Void Method", "B) Value-returning method", "C) User-defined Method", "D) Equivalent Method"} , "B"));
@@ -31,7 +33,7 @@ public class QuizGenerator {
         quizBank.add(new DebuggingQuestions("class Employee {\n void work() { System.out.println(Working); }\n}\n class Developer extends Employee {\n code() {\n System.out.println(Coding)\n}\n}\n Employee e = new Developer();\n e.code();", "((Developer)e).code();")); //Polymorphism
         quizBank.add(new DebuggingQuestions("abstract class Device {\n private abstract void boot();\n }\n class Laptop extends Device {\n void boot()\n }", "protected abstract void boot();")); //Abstraction
         
-
+        //To count the total score of the user when the quiz is over
         int score = 0;
         for(Questions q: quizBank) {
             if (q.askQuestions(input)) {
