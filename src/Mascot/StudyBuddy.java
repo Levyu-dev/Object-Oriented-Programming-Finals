@@ -1,3 +1,4 @@
+
 public class StudyBuddy {
 
     // attributes
@@ -8,16 +9,36 @@ public class StudyBuddy {
 
     // constructor
     public StudyBuddy(String name, String characterType) {
+        if (characterType == null ||
+            (!characterType.equalsIgnoreCase("male") &&
+             !characterType.equalsIgnoreCase("female"))) {
+            throw new IllegalArgumentException("Invalid character type.");
+        }
+
         this.name = name;
         this.characterType = characterType;
         this.expression = "normal";
         this.message = "Hey! Ready to learn something new?";
     }
 
-    
     // change mascot expression
     public void setExpression(String expression) {
-        this.expression = expression;
+        if (expression == null) {
+            throw new IllegalArgumentException("Expression cannot be null.");
+        }
+
+        switch (expression.toLowerCase()) {
+            case "normal":
+            case "happy":
+            case "excited":
+            case "confused":
+            case "thinking":
+            case "sad":
+                this.expression = expression;
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid expression.");
+        }
     }
 
     // change mascot message
@@ -42,7 +63,6 @@ public class StudyBuddy {
         showMessage("You unlocked " + achievementName + "! Great job!");
     }
 
-    
     // getters
     public String getName() {
         return name;
@@ -60,16 +80,46 @@ public class StudyBuddy {
         return message;
     }
 
-      // get mascot image path
+    // get correct image filename
+    private String getFileName() {
+        switch (expression.toLowerCase()) {
+            case "normal":
+                return "normal";
+            case "happy":
+                return "Happy";
+            case "excited":
+                return "Excited";
+            case "confused":
+                return "Confused";
+            case "thinking":
+                return "Thinking";
+            case "sad":
+                return "Sad";
+            default:
+                return "normal";
+        }
+    }
+
+    // get mascot image path
     public String getImagePath() {
-        String folder = "assets/mascot/" + characterType + "/";
-        String fileName = expression;
+        String folderName;
 
         if (characterType.equalsIgnoreCase("male")) {
+            folderName = "Male";
+        } else {
+            folderName = "Female";
+        }
+
+        String fileName = getFileName();
+
+        if (characterType.equalsIgnoreCase("male")) {
+            if (expression.equalsIgnoreCase("sad")) {
+                fileName = "sad";
+            }
+
             fileName += " M";
         }
 
-        return folder + fileName + ".png";
+        return "assets/mascot/" + folderName + "/" + fileName + ".png";
     }
 }
-
