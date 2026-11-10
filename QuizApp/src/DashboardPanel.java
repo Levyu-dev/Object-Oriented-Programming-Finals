@@ -19,7 +19,7 @@ public class DashboardPanel extends JPanel {
         welcome.setForeground(Theme.TEXT_DARK);
 
         JPanel xpPanel = new JPanel(new BorderLayout(6, 6));
-        xpPanel.setBackground(Theme.CARD_RED);
+        xpPanel.setBackground(Theme.CARD_RED); 
         xpPanel.setBorder(new EmptyBorder(12, 15, 12, 15));
         JLabel xpLabel = new JLabel("Your current level: 1,200 XP (250 XP until Level 6)");
         xpLabel.setForeground(Theme.WHITE);
@@ -52,7 +52,7 @@ public class DashboardPanel extends JPanel {
         JPanel quickGrid = new JPanel(new GridLayout(2, 2, 15, 15));
         quickGrid.setBackground(Theme.WHITE);
         JButton b1 = Theme.createRedButton("Practice");
-        b1.addActionListener(e -> controller.showStudentScreen("PRACTICE"));
+        b1.addActionListener(e -> controller.showStudentScreen("PRACTICE"));       
         JButton b2 = Theme.createRedButton("Timed Quiz");
         b2.addActionListener(e -> controller.showAlert("Connecting to Timed Quiz..."));
         JButton b3 = Theme.createRedButton("Final Boss");
