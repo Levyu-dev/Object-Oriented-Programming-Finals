@@ -1,4 +1,3 @@
-package quiz;
 import java.util.ArrayList;
 
 public class FinalBossChallenge extends Quiz {

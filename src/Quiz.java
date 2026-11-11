@@ -1,4 +1,3 @@
-package quiz;
 import java.util.ArrayList;
 
 public class Quiz {
@@ -6,7 +5,7 @@ public class Quiz {
     protected int currentQuestionIndex;
     protected int score;
     protected int correctAnswersCount;
-    
+
     public Quiz(ArrayList<Questions> questions) {
         this.questions = questions;
         this.currentQuestionIndex = 0;
@@ -15,21 +14,19 @@ public class Quiz {
     }
 
     public Questions getCurrentQuestion() {
-        return questions.get(currentQuestionIndex);
-    }
-
-    public boolean isFinished() {
         if (isFinished()) {
             return null;
         }
-          return questions.get(currentQuestionIndex);
+        return questions.get(currentQuestionIndex);
     }
-    public boolean isFinished() {
-        return currentQuestionIndex >= questions.size();
-    } 
 
-    Questions currentQuestions = getCurrentQuestion();
-    boolean isCorrect = currentQuestion.checkAnswer(userAnswer);
+    public boolean submitAnswer(String userAnswer) {
+        if (isFinished()) {
+            return false;
+        }
+
+        Questions currentQuestion = getCurrentQuestion();
+        boolean isCorrect = currentQuestion.checkAnswer(userAnswer);
 
         if (isCorrect) {
             score += 10;
@@ -38,6 +35,10 @@ public class Quiz {
 
         currentQuestionIndex++;
         return isCorrect;
+    }
+
+    public boolean isFinished() {
+        return currentQuestionIndex >= questions.size();
     }
 
     public double calculateAccuracy() {
