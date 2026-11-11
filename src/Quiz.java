@@ -1,19 +1,34 @@
+package quiz;
+
 import java.util.ArrayList;
 
 public class Quiz {
+
     protected ArrayList<Questions> questions;
     protected int currentQuestionIndex;
     protected int score;
     protected int correctAnswersCount;
-    
+
     public Quiz(ArrayList<Questions> questions) {
-        this.questions = questions;
+
+        if (questions == null) {
+            throw new IllegalArgumentException(
+                    "Question list cannot be null.");
+        }
+
+        this.questions = new ArrayList<>(questions);
         this.currentQuestionIndex = 0;
         this.score = 0;
         this.correctAnswersCount = 0;
     }
 
     public Questions getCurrentQuestion() {
+
+        if (isFinished()) {
+            throw new InvalidQuizSubmissionException(
+                    "Quiz is already finished.");
+        }
+
         return questions.get(currentQuestionIndex);
     }
 
@@ -22,17 +37,20 @@ public class Quiz {
     }
 
     public boolean submitAnswer(String userAnswer) {
+
         if (isFinished()) {
-            throw new InvalidQuizSubmissionException("Quiz is already finished.");
+            throw new InvalidQuizSubmissionException(
+                    "Quiz is already finished.");
+        }
+
+        if (userAnswer == null || userAnswer.trim().isEmpty()) {
+            throw new InvalidQuizSubmissionException(
+                    "Answer cannot be empty.");
         }
 
         Questions currentQuestion = getCurrentQuestion();
 
-        if (optionIndex < 0 || optionIndex >= currentQuestion.getOptions().length) {
-            throw new InvalidQuizSubmissionException("Invalid option index: " + optionIndex);
-        }
-
-        boolean isCorrect = currentQuestion.checkAnswer(optionIndex);
+        boolean isCorrect = currentQuestion.checkAnswer(userAnswer);
 
         if (isCorrect) {
             score += 10;
@@ -40,10 +58,12 @@ public class Quiz {
         }
 
         currentQuestionIndex++;
+
         return isCorrect;
     }
 
     public double calculateAccuracy() {
+
         if (questions.isEmpty()) {
             return 0.0;
         }
