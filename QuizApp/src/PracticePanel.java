@@ -6,20 +6,20 @@ public class PracticePanel extends JPanel {
     private String selectedTopic = "Java Basics";
 
     public PracticePanel(ApplicationController controller) {
-        setLayout(new BorderLayout(15, 15));
-        setBackground(Theme.BG_YELLOW);
-        setBorder(new EmptyBorder(20, 30, 20, 30));
+        setLayout(new BorderLayout(10, 10));
+        setBackground(Theme.BG_CREAM);
+        setBorder(new EmptyBorder(14, 16, 14, 16));
 
-        JLabel header = new JLabel("Practice - Choose a Topic & Settings");
-        header.setFont(new Font("SansSerif", Font.BOLD, 24));
+        JLabel header = new JLabel("Practice Setup");
+        header.setFont(new Font("SansSerif", Font.BOLD, 20));
         header.setForeground(Theme.TEXT_DARK);
 
         JPanel center = new JPanel();
         center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
-        center.setBackground(Theme.BG_YELLOW);
+        center.setBackground(Theme.BG_CREAM);
 
-        JPanel topicGrid = new JPanel(new GridLayout(2, 3, 12, 12));
-        topicGrid.setBackground(Theme.BG_YELLOW);
+        JPanel topicGrid = new JPanel(new GridLayout(3, 2, 8, 8));
+        topicGrid.setBackground(Theme.BG_CREAM);
         String[] topics = {"Java Basics", "Conditionals", "Loops", "Methods", "Arrays", "OOP"};
         JButton[] buttons = new JButton[topics.length];
 
@@ -36,23 +36,31 @@ public class PracticePanel extends JPanel {
             topicGrid.add(btn);
         }
 
-        JPanel options = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 15));
-        options.setBackground(Theme.BG_YELLOW);
+        JPanel optionsCard = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+        optionsCard.setLayout(new GridLayout(2, 2, 8, 8));
+
         JComboBox<String> diffBox = new JComboBox<>(new String[]{"Easy", "Medium", "Hard"});
-        JTextField countField = new JTextField("10", 4);
-        options.add(new JLabel("Difficulty:")); options.add(diffBox);
-        options.add(new JLabel("Questions:")); options.add(countField);
+        JTextField countField = new JTextField("10");
+
+        JLabel dLabel = new JLabel("Difficulty:");
+        dLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        JLabel qLabel = new JLabel("Questions (1-50):");
+        qLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+        optionsCard.add(dLabel); optionsCard.add(diffBox);
+        optionsCard.add(qLabel); optionsCard.add(countField);
 
         center.add(topicGrid);
-        center.add(options);
+        center.add(Box.createVerticalStrut(12));
+        center.add(optionsCard);
 
         JButton startBtn = Theme.createRedButton("START PRACTICE");
-        startBtn.setPreferredSize(new Dimension(0, 48));
+        startBtn.setPreferredSize(new Dimension(0, 44));
         startBtn.addActionListener(e -> {
             try {
                 int count = Integer.parseInt(countField.getText().trim());
                 if (count < 1 || count > 50) throw new InvalidMenuChoiceException("Enter 1 to 50 questions.");
-                controller.showAlert("Starting " + selectedTopic + " (" + diffBox.getSelectedItem() + ", " + count + " questions)");
+                controller.showAlert("Starting " + selectedTopic + "\nDifficulty: " + diffBox.getSelectedItem() + "\nQuestions: " + count);
             } catch (NumberFormatException ex) {
                 controller.showError("Please type a valid number!");
             } catch (InvalidMenuChoiceException ex) {

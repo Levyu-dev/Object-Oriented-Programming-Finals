@@ -1,73 +1,96 @@
 import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class DashboardPanel extends JPanel {
+    private ApplicationController controller;
+    private JLabel welcomeLabel;
+    private JLabel xpLabel;
+    private JProgressBar xpBar;
 
     public DashboardPanel(ApplicationController controller) {
-        setLayout(new BorderLayout(12, 12));
-        setBackground(Theme.WHITE);
-        setBorder(new EmptyBorder(20, 28, 20, 28));
+        this.controller = controller;
+        setLayout(new BorderLayout(10, 10));
+        setBackground(Theme.BG_CREAM);
+        setBorder(new EmptyBorder(14, 16, 14, 16));
 
-        // Top: Welcome + XP Bar + Continue Learning Bar
         JPanel topBox = new JPanel();
         topBox.setLayout(new BoxLayout(topBox, BoxLayout.Y_AXIS));
-        topBox.setBackground(Theme.WHITE);
+        topBox.setBackground(Theme.BG_CREAM);
 
-        JLabel welcome = new JLabel("Welcome! @user");
-        welcome.setFont(new Font("SansSerif", Font.BOLD, 28));
-        welcome.setForeground(Theme.TEXT_DARK);
+        welcomeLabel = new JLabel("Welcome!");
+        welcomeLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+        welcomeLabel.setForeground(Theme.TEXT_DARK);
+        welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JPanel xpPanel = new JPanel(new BorderLayout(6, 6));
-        xpPanel.setBackground(Theme.CARD_RED);
-        xpPanel.setBorder(new EmptyBorder(12, 15, 12, 15));
-        JLabel xpLabel = new JLabel("Your current level: 1,200 XP (250 XP until Level 6)");
+        JPanel xpPanel = Theme.createRoundedCard(Theme.CARD_RED, 12);
+        xpPanel.setLayout(new BorderLayout(6, 6));
+        xpPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        xpLabel = new JLabel("Level 1 — 500 XP");
         xpLabel.setForeground(Theme.WHITE);
-        xpLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        xpLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        xpBar = Theme.createProgressBar(500, 2000, Theme.WHITE, new Color(140, 35, 12));
         xpPanel.add(xpLabel, BorderLayout.NORTH);
-        xpPanel.add(Theme.createProgressBar(1200, 1450, Theme.WHITE, new Color(140, 35, 12)), BorderLayout.CENTER);
+        xpPanel.add(xpBar, BorderLayout.CENTER);
 
-        JPanel continuePanel = new JPanel(new BorderLayout(10, 6));
-        continuePanel.setBackground(Theme.WHITE);
-        continuePanel.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(Theme.CARD_RED, 2, true), new EmptyBorder(10, 14, 10, 14)
-        ));
-        JPanel progressInfo = new JPanel(new BorderLayout(5, 5));
-        progressInfo.setBackground(Theme.WHITE);
-        progressInfo.add(new JLabel("Continue Learning: Object-Oriented Programming (6/10)"), BorderLayout.NORTH);
-        progressInfo.add(Theme.createProgressBar(6, 10, Theme.CARD_RED, Theme.BG_YELLOW), BorderLayout.CENTER);
+        JPanel continuePanel = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+        continuePanel.setLayout(new BorderLayout(8, 8));
+        continuePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton resumeBtn = Theme.createRedButton("Resume");
-        resumeBtn.addActionListener(e -> controller.showAlert("Resuming OOP Quiz at Question 7 of 10..."));
-        continuePanel.add(progressInfo, BorderLayout.CENTER);
-        continuePanel.add(resumeBtn, BorderLayout.EAST);
+        JLabel contTitle = new JLabel("Continue: OOP Basics (6/10)");
+        contTitle.setFont(new Font("SansSerif", Font.BOLD, 13));
+        contTitle.setForeground(Theme.TEXT_DARK);
 
-        topBox.add(welcome);
+        JButton resumeBtn = Theme.createRedButton("Resume (+100 XP)");
+        resumeBtn.setPreferredSize(new Dimension(0, 34));
+        resumeBtn.addActionListener(e -> {
+            controller.getSession().addXP(100);
+            refresh();
+            controller.showAlert("Lesson completed! +100 XP added.");
+        });
+
+        continuePanel.add(contTitle, BorderLayout.NORTH);
+        continuePanel.add(Theme.createProgressBar(6, 10, Theme.CARD_RED, Theme.WHITE), BorderLayout.CENTER);
+        continuePanel.add(resumeBtn, BorderLayout.SOUTH);
+
+        topBox.add(welcomeLabel);
         topBox.add(Box.createVerticalStrut(10));
         topBox.add(xpPanel);
         topBox.add(Box.createVerticalStrut(10));
         topBox.add(continuePanel);
 
-        // Center: Quick Access Grid
-        JPanel quickGrid = new JPanel(new GridLayout(2, 2, 15, 15));
-        quickGrid.setBackground(Theme.WHITE);
-        JButton b1 = Theme.createRedButton("Practice");
+        JPanel quickGrid = new JPanel(new GridLayout(2, 2, 10, 10));
+        quickGrid.setBackground(Theme.BG_CREAM);
+
+        JButton b1 = Theme.createRedButton("<html><center><b>Practice</b><br><small>Own pace</small></center></html>");
         b1.addActionListener(e -> controller.showStudentScreen("PRACTICE"));
-        JButton b2 = Theme.createRedButton("Timed Quiz");
-        b2.addActionListener(e -> controller.showAlert("Connecting to Timed Quiz..."));
-        JButton b3 = Theme.createRedButton("Final Boss");
-        b3.addActionListener(e -> controller.showAlert("Connecting to Final Boss..."));
-        JButton b4 = Theme.createRedButton("Party Mode");
-        b4.addActionListener(e -> controller.showAlert("Connecting to Party Mode..."));
+
+        JButton b2 = Theme.createRedButton("<html><center><b>Timed Quiz</b><br><small>Beat clock</small></center></html>");
+        b2.addActionListener(e -> controller.showAlert("Starting Timed Quiz..."));
+
+        JButton b3 = Theme.createRedButton("<html><center><b>Final Boss</b><br><small>Big test</small></center></html>");
+        b3.addActionListener(e -> controller.showAlert("Starting Final Boss..."));
+
+        JButton b4 = Theme.createRedButton("<html><center><b>Party Mode</b><br><small>With friends</small></center></html>");
+        b4.addActionListener(e -> controller.showAlert("Starting Party Mode..."));
+
         quickGrid.add(b1); quickGrid.add(b2); quickGrid.add(b3); quickGrid.add(b4);
 
-        // Bottom: Study Buddy Tip
-        JButton buddyBtn = Theme.createWhiteButton("StudyBuddy: \"Every bug you fix makes you a better programmer.\"");
-        buddyBtn.setBorder(new LineBorder(Theme.CARD_RED, 2, true));
+        JButton buddyBtn = Theme.createWhiteButton("<html><center><b>StudyBuddy:</b> Every bug you fix makes you better!</center></html>");
+        buddyBtn.setPreferredSize(new Dimension(0, 46));
         buddyBtn.addActionListener(e -> controller.showAlert("StudyBuddy Tip: Keep fields private and use getters/setters!"));
 
         add(topBox, BorderLayout.NORTH);
         add(quickGrid, BorderLayout.CENTER);
         add(buddyBtn, BorderLayout.SOUTH);
+    }
+
+    public void refresh() {
+        UserSession.StudentRecord s = controller.getSession().getCurrentStudent();
+        int level = (s.xp / 250) + 1;
+        welcomeLabel.setText("Hi, @" + s.name + " (" + s.section + ")");
+        xpLabel.setText("Level " + level + " — " + s.xp + " XP");
+        xpBar.setValue(Math.min(2000, s.xp));
     }
 }

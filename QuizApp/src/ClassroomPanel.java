@@ -3,84 +3,124 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class ClassroomPanel extends JPanel {
+    private ApplicationController controller;
+    private boolean isTeacher;
+    private JLabel titleLabel;
+    private JList<String> assignmentList;
+    private JTextArea leaderboardArea;
 
     public ClassroomPanel(ApplicationController controller, boolean isTeacher) {
-        setLayout(new BorderLayout(15, 15));
-        setBackground(Theme.WHITE);
-        setBorder(new EmptyBorder(20, 28, 20, 28));
+        this.controller = controller;
+        this.isTeacher = isTeacher;
 
-        JLabel title = new JLabel(isTeacher ? "Teacher Portal — Section OOP101" : "Student Classroom — Section OOP101");
-        title.setFont(new Font("SansSerif", Font.BOLD, 22));
-        title.setForeground(Theme.TEXT_DARK);
+        setLayout(new BorderLayout(10, 10));
+        setBackground(Theme.BG_CREAM);
+        setBorder(new EmptyBorder(14, 16, 14, 16));
 
-        JPanel grid = new JPanel(new GridLayout(1, 2, 15, 0));
-        grid.setBackground(Theme.WHITE);
+        titleLabel = new JLabel("Classroom");
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        titleLabel.setForeground(Theme.TEXT_DARK);
 
-        // Left Side: Shared Assignments List
-        JPanel left = new JPanel(new BorderLayout(8, 8));
-        left.setBackground(Theme.BG_YELLOW);
-        left.setBorder(new EmptyBorder(15, 15, 15, 15));
-        left.add(new JLabel("Class Activities:"), BorderLayout.NORTH);
+        JPanel stack = new JPanel(new GridLayout(2, 1, 0, 12));
+        stack.setBackground(Theme.BG_CREAM);
 
-        JList<String> list = new JList<>(controller.getAssignmentModel());
-        left.add(new JScrollPane(list), BorderLayout.CENTER);
+        JPanel topCard = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+        topCard.setLayout(new BorderLayout(6, 6));
+
+        JLabel actHeader = new JLabel("Section Activities");
+        actHeader.setFont(new Font("SansSerif", Font.BOLD, 14));
+        actHeader.setForeground(Theme.TEXT_DARK);
+        topCard.add(actHeader, BorderLayout.NORTH);
+
+        assignmentList = new JList<>();
+        assignmentList.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        topCard.add(new JScrollPane(assignmentList), BorderLayout.CENTER);
 
         if (!isTeacher) {
-            JButton startBtn = Theme.createRedButton("Start Selected Activity");
+            JButton startBtn = Theme.createRedButton("Complete Selected (+150 XP)");
+            startBtn.setPreferredSize(new Dimension(0, 36));
             startBtn.addActionListener(e -> {
-                if (list.getSelectedValue() == null) controller.showError("Select an activity first.");
-                else controller.showAlert("Starting: " + list.getSelectedValue());
+                if (assignmentList.getSelectedValue() == null) {
+                    controller.showError("Tap an activity from the list first.");
+                } else {
+                    controller.getSession().addXP(150);
+                    refresh();
+                    controller.showAlert("Completed: " + assignmentList.getSelectedValue() + "\nEarned +150 XP!");
+                }
             });
-            left.add(startBtn, BorderLayout.SOUTH);
+            topCard.add(startBtn, BorderLayout.SOUTH);
         }
 
-        // Right Side: Teacher Post Form OR Student Leaderboard
-        JPanel right = new JPanel(new BorderLayout(8, 8));
-        right.setBackground(Theme.BG_YELLOW);
-        right.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JPanel bottomCard = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+        bottomCard.setLayout(new BorderLayout(6, 6));
 
         if (isTeacher) {
-            right.add(new JLabel("Post New Assignment:"), BorderLayout.NORTH);
-            JPanel form = new JPanel();
-            form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
+            JLabel formTitle = new JLabel("Post New Assignment");
+            formTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
+            formTitle.setForeground(Theme.TEXT_DARK);
+            bottomCard.add(formTitle, BorderLayout.NORTH);
+
+            JPanel form = new JPanel(new GridLayout(4, 1, 0, 4));
             form.setBackground(Theme.BG_YELLOW);
             JTextField nameField = new JTextField();
             JTextField qField = new JTextField("10");
-            JButton postBtn = Theme.createRedButton("POST ASSIGNMENT");
 
+            form.add(new JLabel("Activity Title:")); form.add(nameField);
+            form.add(new JLabel("Question Count:")); form.add(qField);
+            bottomCard.add(form, BorderLayout.CENTER);
+
+            JButton postBtn = Theme.createRedButton("POST ASSIGNMENT");
+            postBtn.setPreferredSize(new Dimension(0, 36));
             postBtn.addActionListener(e -> {
                 try {
                     String name = nameField.getText().trim();
                     if (name.isEmpty()) throw new InvalidMenuChoiceException("Title cannot be empty.");
                     int q = Integer.parseInt(qField.getText().trim());
                     if (q < 1 || q > 50) throw new InvalidMenuChoiceException("Questions must be 1-50.");
-                    controller.getAssignmentModel().addElement(name + " (" + q + " Questions)");
+                    String sec = controller.getSession().getCurrentSection();
+                    controller.getSession().getAssignmentsForSection(sec).addElement(name + " (" + q + " Qs)");
                     nameField.setText("");
-                    controller.showAlert("Assignment posted!");
+                    controller.showAlert("Posted to Section " + sec + "!");
                 } catch (NumberFormatException ex) {
                     controller.showError("Enter a valid number.");
                 } catch (InvalidMenuChoiceException ex) {
                     controller.showError(ex.getMessage());
                 }
             });
-
-            form.add(new JLabel("Title:")); form.add(nameField);
-            form.add(Box.createVerticalStrut(10));
-            form.add(new JLabel("Questions:")); form.add(qField);
-            form.add(Box.createVerticalStrut(15));
-            form.add(postBtn);
-            right.add(form, BorderLayout.CENTER);
+            bottomCard.add(postBtn, BorderLayout.SOUTH);
         } else {
-            right.add(new JLabel("Class Leaderboard:"), BorderLayout.NORTH);
-            JTextArea board = new JTextArea("1. @alex — 1,450 XP\n2. @user — 1,200 XP\n3. @jumana — 1,120 XP\n4. @iyce — 980 XP");
-            board.setEditable(false);
-            board.setFont(new Font("SansSerif", Font.BOLD, 15));
-            right.add(board, BorderLayout.CENTER);
+            JLabel boardTitle = new JLabel("Section Leaderboard");
+            boardTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
+            boardTitle.setForeground(Theme.TEXT_DARK);
+            bottomCard.add(boardTitle, BorderLayout.NORTH);
+
+            leaderboardArea = new JTextArea();
+            leaderboardArea.setEditable(false);
+            leaderboardArea.setFont(new Font("SansSerif", Font.BOLD, 13));
+            leaderboardArea.setForeground(Theme.TEXT_DARK);
+            leaderboardArea.setBorder(new EmptyBorder(8, 10, 8, 10));
+            bottomCard.add(new JScrollPane(leaderboardArea), BorderLayout.CENTER);
         }
 
-        grid.add(left);
-        grid.add(right);
-        add(title, BorderLayout.NORTH);
-        add(grid, BorderLayout.CENTER);
+        stack.add(topCard);
+        stack.add(bottomCard);
+        add(titleLabel, BorderLayout.NORTH);
+        add(stack, BorderLayout.CENTER);
+    }
+
+    public void refresh() {
+        UserSession session = controller.getSession();
+        String sec = session.getCurrentSection();
+        titleLabel.setText((isTeacher ? "Manage Class" : "Classroom") + " — " + sec);
+        assignmentList.setModel(session.getAssignmentsForSection(sec));
+
+        if (!isTeacher && leaderboardArea != null) {
+            StringBuilder sb = new StringBuilder();
+            int rank = 1;
+            for (UserSession.StudentRecord s : session.getStudentsInSection(sec)) {
+                sb.append(rank++).append(". @").append(s.name).append(" — ").append(s.xp).append(" XP\n");
+            }
+            leaderboardArea.setText(sb.toString());
+        }
     }
 }

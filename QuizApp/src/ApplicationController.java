@@ -6,45 +6,70 @@ public class ApplicationController extends JFrame {
     private CardLayout rootLayout = new CardLayout();
     private JPanel rootContainer = new JPanel(rootLayout);
 
-    // Separate CardLayouts for Student and Teacher so they cannot cross over
     private CardLayout studentLayout = new CardLayout();
     private JPanel studentContent = new JPanel(studentLayout);
 
     private CardLayout teacherLayout = new CardLayout();
     private JPanel teacherContent = new JPanel(teacherLayout);
 
-    private DefaultListModel<String> assignmentModel = new DefaultListModel<>();
+    private UserSession session = new UserSession();
+    private DashboardPanel studentDash;
+    private ClassroomPanel studentClass;
+    private TeacherDashboardPanel teacherDash;
+    private ClassroomPanel teacherClass;
 
     public ApplicationController() {
-        setTitle("Learn to Code - OOP Project");
-        setSize(960, 620);
+        setTitle("Learn to Code - Mobile App");
+        setSize(430, 780);
+        setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        assignmentModel.addElement("Lab 1: Classes & Objects (10 Questions)");
-        assignmentModel.addElement("Quiz 2: Inheritance & Super (15 Questions)");
-
-        // 1. Welcome / Role Login Screen
         rootContainer.add(createWelcomeScreen(), "WELCOME");
 
-        // 2. Isolated Student Shell
-        JPanel studentShell = new JPanel(new BorderLayout());
-        studentShell.add(new SidebarNav(this, false), BorderLayout.WEST);
-        studentContent.add(new DashboardPanel(this), "STUDENT_DASH");
+        studentDash = new DashboardPanel(this);
+        studentClass = new ClassroomPanel(this, false);
+        studentContent.add(studentDash, "STUDENT_DASH");
         studentContent.add(new PracticePanel(this), "PRACTICE");
-        studentContent.add(new ClassroomPanel(this, false), "STUDENT_CLASS");
-        studentShell.add(studentContent, BorderLayout.CENTER);
-        rootContainer.add(studentShell, "STUDENT_APP");
+        studentContent.add(studentClass, "STUDENT_CLASS");
+        rootContainer.add(buildMobileShell(new SidebarNav(this, false), studentContent), "STUDENT_APP");
 
-        // 3. Isolated Teacher Shell
-        JPanel teacherShell = new JPanel(new BorderLayout());
-        teacherShell.add(new SidebarNav(this, true), BorderLayout.WEST);
-        teacherContent.add(new TeacherDashboardPanel(this), "TEACHER_DASH");
-        teacherContent.add(new ClassroomPanel(this, true), "TEACHER_CLASS");
-        teacherShell.add(teacherContent, BorderLayout.CENTER);
-        rootContainer.add(teacherShell, "TEACHER_APP");
+        teacherDash = new TeacherDashboardPanel(this);
+        teacherClass = new ClassroomPanel(this, true);
+        teacherContent.add(teacherDash, "TEACHER_DASH");
+        teacherContent.add(teacherClass, "TEACHER_CLASS");
+        rootContainer.add(buildMobileShell(new SidebarNav(this, true), teacherContent), "TEACHER_APP");
 
         add(rootContainer);
+    }
+
+    private JPanel buildMobileShell(SidebarNav sidebar, JPanel contentArea) {
+        JPanel shell = new JPanel(new BorderLayout());
+        shell.setBackground(Theme.BG_CREAM);
+
+        JPanel topBar = new JPanel(new BorderLayout());
+        topBar.setBackground(Theme.BG_YELLOW);
+        topBar.setBorder(new EmptyBorder(6, 10, 6, 12));
+
+        JButton toggleBtn = Theme.createWhiteButton("Menu");
+        toggleBtn.setPreferredSize(new Dimension(65, 32));
+        toggleBtn.addActionListener(e -> {
+            sidebar.setVisible(!sidebar.isVisible());
+            shell.revalidate();
+            shell.repaint();
+        });
+
+        JLabel appTitle = new JLabel("Learn to Code", SwingConstants.RIGHT);
+        appTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
+        appTitle.setForeground(Theme.TEXT_DARK);
+
+        topBar.add(toggleBtn, BorderLayout.WEST);
+        topBar.add(appTitle, BorderLayout.EAST);
+
+        shell.add(topBar, BorderLayout.NORTH);
+        shell.add(sidebar, BorderLayout.WEST);
+        shell.add(contentArea, BorderLayout.CENTER);
+        return shell;
     }
 
     public void start() {
@@ -56,64 +81,103 @@ public class ApplicationController extends JFrame {
         rootLayout.show(rootContainer, "WELCOME");
     }
 
+    public UserSession getSession() {
+        return session;
+    }
+
     public void showStudentScreen(String name) {
+        studentDash.refresh();
+        studentClass.refresh();
         rootLayout.show(rootContainer, "STUDENT_APP");
         studentLayout.show(studentContent, name);
     }
 
     public void showTeacherScreen(String name) {
+        teacherDash.refresh();
+        teacherClass.refresh();
         rootLayout.show(rootContainer, "TEACHER_APP");
         teacherLayout.show(teacherContent, name);
-    }
-
-    public DefaultListModel<String> getAssignmentModel() {
-        return assignmentModel;
     }
 
     private JPanel createWelcomeScreen() {
         JPanel panel = new JPanel();
         panel.setBackground(Theme.BG_YELLOW);
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(new EmptyBorder(120, 50, 120, 50));
+        panel.setBorder(new EmptyBorder(75, 35, 75, 35));
+
+        // Temporary Rounded Red Logo Square (matches Page 1 of your slides)
+        JPanel logoBox = Theme.createRoundedCard(Theme.CARD_RED, 0);
+        logoBox.setPreferredSize(new Dimension(75, 75));
+        logoBox.setMaximumSize(new Dimension(75, 75));
+        logoBox.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel title = new JLabel("Learn to Code.");
-        title.setFont(new Font("SansSerif", Font.BOLD, 38));
+        title.setFont(new Font("SansSerif", Font.BOLD, 34));
         title.setForeground(Theme.TEXT_DARK);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel sub = new JLabel("Select your role to continue");
-        sub.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        sub.setForeground(Theme.TEXT_DARK);
-        sub.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel subtitle = new JLabel("Your coding journey starts here");
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        subtitle.setForeground(Theme.TEXT_DARK);
+        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 25));
+        JPanel form = new JPanel(new GridLayout(4, 1, 0, 6));
+        form.setBackground(Theme.BG_YELLOW);
+        form.setMaximumSize(new Dimension(280, 130));
+
+        JTextField nameField = new JTextField("Angel");
+        JTextField sectionField = new JTextField("OOP101");
+
+        form.add(new JLabel("Your Name / Username:"));
+        form.add(nameField);
+        form.add(new JLabel("Class Section Code:"));
+        form.add(sectionField);
+
+        JPanel btnRow = new JPanel(new GridLayout(2, 1, 0, 12));
         btnRow.setBackground(Theme.BG_YELLOW);
+        btnRow.setMaximumSize(new Dimension(280, 105));
 
         JButton studentBtn = Theme.createRedButton("ENTER AS STUDENT");
-        studentBtn.setPreferredSize(new Dimension(210, 50));
-        studentBtn.addActionListener(e -> showStudentScreen("STUDENT_DASH"));
+        studentBtn.addActionListener(e -> handleLogin(nameField.getText(), sectionField.getText(), false));
 
         JButton teacherBtn = Theme.createWhiteButton("ENTER AS TEACHER");
-        teacherBtn.setPreferredSize(new Dimension(210, 50));
-        teacherBtn.addActionListener(e -> verifyTeacherLogin());
+        teacherBtn.addActionListener(e -> handleLogin(nameField.getText(), sectionField.getText(), true));
 
         btnRow.add(studentBtn);
         btnRow.add(teacherBtn);
+
+        panel.add(logoBox);
+        panel.add(Box.createVerticalStrut(18));
         panel.add(title);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(sub);
+        panel.add(Box.createVerticalStrut(6));
+        panel.add(subtitle);
+        panel.add(Box.createVerticalStrut(22));
+        panel.add(form);
+        panel.add(Box.createVerticalStrut(22));
         panel.add(btnRow);
         return panel;
     }
 
-    private void verifyTeacherLogin() {
+
+    private void handleLogin(String rawName, String rawSection, boolean asTeacher) {
         try {
-            String pin = JOptionPane.showInputDialog(this, "Enter Instructor PIN (Hint: 1234):", "Teacher Verification", JOptionPane.QUESTION_MESSAGE);
-            if (pin == null) return; // User clicked Cancel
-            if (!pin.trim().equals("1234")) {
-                throw new InvalidMenuChoiceException("Access Denied: Invalid Instructor PIN.");
+            String name = rawName.trim();
+            String section = rawSection.trim().toUpperCase();
+            if (name.isEmpty() || section.isEmpty()) {
+                throw new InvalidMenuChoiceException("Please enter both your Name and Class Section Code.");
             }
-            showTeacherScreen("TEACHER_DASH");
+            if (asTeacher) {
+                String pin = JOptionPane.showInputDialog(this, "Enter Instructor PIN (Hint: 1234):", "Teacher Verification", JOptionPane.QUESTION_MESSAGE);
+                if (pin == null) return;
+                if (!pin.trim().equals("1234")) {
+                    throw new InvalidMenuChoiceException("Access Denied: Invalid Instructor PIN.");
+                }
+                session.loginTeacher(name, section);
+                showTeacherScreen("TEACHER_DASH");
+            } else {
+                session.loginStudent(name, section);
+                showStudentScreen("STUDENT_DASH");
+            }
         } catch (InvalidMenuChoiceException ex) {
             showError(ex.getMessage());
         }
