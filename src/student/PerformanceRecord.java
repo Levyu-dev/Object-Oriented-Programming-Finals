@@ -15,20 +15,19 @@ public class PerformanceRecord {
         this.totalQuestions = 0;
     }
 
-    // Add quiz result
-    public void addResult(int correctAnswers, int questions) {
-
-        if (questions <= 0 || correctAnswers < 0
-                || correctAnswers > questions) {
-
-            System.out.println("Invalid result.");
-            return;
-        }
-
-        attempts++;
-        totalCorrect += correctAnswers;
-        totalQuestions += questions;
+   // Add quiz result
+public boolean addResult(int correctAnswers, int questions) {
+    if (questions <= 0 || correctAnswers < 0
+            || correctAnswers > questions) {
+        return false;
     }
+
+    attempts++;
+    totalCorrect += correctAnswers;
+    totalQuestions += questions;
+
+    return true;
+}
 
     // Calculate accuracy
     public double getAccuracy() {
