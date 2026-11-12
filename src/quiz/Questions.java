@@ -1,3 +1,4 @@
+
 package quiz;
 
 import java.util.*;
@@ -37,6 +38,11 @@ abstract class Questions{
     //Ignores the case difference in scanner inputs
     protected boolean checkAnswer (String userAnswer) {
         return userAnswer.equalsIgnoreCase(correctAnswer);
+    }
+
+    //Gets the question text
+    public String getQuestionText() {
+        return questionText;
     }
 }
 

@@ -1,6 +1,10 @@
+
+package quiz;
+
 import java.util.ArrayList;
 
 public class FinalBossChallenge extends Quiz {
+
     private int bossCurrentHp;
     private int bossMaxHp;
     private int playerCurrentHp;
@@ -8,8 +12,16 @@ public class FinalBossChallenge extends Quiz {
     private int damageToBoss = 20;
     private int damageToPlayer = 15;
 
-    public FinalBossChallenge(ArrayList<Question> questions, int bossHp, int playerHp) {
+    public FinalBossChallenge(ArrayList<Questions> questions,
+            int bossHp, int playerHp) {
+
         super(questions);
+
+        if (bossHp <= 0 || playerHp <= 0) {
+            throw new IllegalArgumentException(
+                    "HP must be greater than zero.");
+        }
+
         this.bossMaxHp = bossHp;
         this.bossCurrentHp = bossHp;
         this.playerMaxHp = playerHp;
@@ -17,8 +29,8 @@ public class FinalBossChallenge extends Quiz {
     }
 
     @Override
-    public boolean submitAnswer(int optionIndex) {
-        boolean isCorrect = super.submitAnswer(optionIndex);
+    public boolean submitAnswer(String userAnswer) {
+        boolean isCorrect = super.submitAnswer(userAnswer);
 
         if (isCorrect) {
             bossCurrentHp -= damageToBoss;
