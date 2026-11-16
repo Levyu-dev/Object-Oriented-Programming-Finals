@@ -38,6 +38,11 @@ abstract class Questions{
     protected boolean checkAnswer (String userAnswer) {
         return userAnswer.equalsIgnoreCase(correctAnswer);
     }
+
+    //Gets the question text
+    public String getQuestionText() {
+        return questionText;
+    }
 }
 
 //Sub classes for every type of questions using overriding
