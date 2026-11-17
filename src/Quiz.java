@@ -1,32 +1,44 @@
+package quiz;
+
 import java.util.ArrayList;
 
 public class Quiz {
+
     protected ArrayList<Questions> questions;
     protected int currentQuestionIndex;
     protected int score;
     protected int correctAnswersCount;
 
     public Quiz(ArrayList<Questions> questions) {
-        this.questions = questions;
+
+        if (questions == null) {
+            throw new IllegalArgumentException(
+                    "Question list cannot be null.");
+        }
+
+        this.questions = new ArrayList<>(questions);
         this.currentQuestionIndex = 0;
         this.score = 0;
         this.correctAnswersCount = 0;
     }
 
     public Questions getCurrentQuestion() {
-        if (isFinished()) {
-            return null;
-        }
         return questions.get(currentQuestionIndex);
     }
 
     public boolean submitAnswer(String userAnswer) {
+
         if (isFinished()) {
-            return false;
+            throw new InvalidQuizSubmissionException("Quiz is already finished.");
         }
 
         Questions currentQuestion = getCurrentQuestion();
-        boolean isCorrect = currentQuestion.checkAnswer(userAnswer);
+
+        if (optionIndex < 0 || optionIndex >= currentQuestion.getOptions().length) {
+            throw new InvalidQuizSubmissionException("Invalid option index: " + optionIndex);
+        }
+
+        boolean isCorrect = currentQuestion.checkAnswer(optionIndex);
 
         if (isCorrect) {
             score += 10;
@@ -34,6 +46,7 @@ public class Quiz {
         }
 
         currentQuestionIndex++;
+
         return isCorrect;
     }
 
@@ -42,6 +55,7 @@ public class Quiz {
     }
 
     public double calculateAccuracy() {
+
         if (questions.isEmpty()) {
             return 0.0;
         }
