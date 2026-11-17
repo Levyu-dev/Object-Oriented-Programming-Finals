@@ -1,77 +1,94 @@
-package quiz;
+package Quiz;
 
-import java.util.ArrayList;
+import java.util.*;
 
-public class Quiz {
+public class Quiz implements GameMode {
+    private final String title;
+    protected final List<Questions> questions = new ArrayList<>();
+    private int score;
+    private int attempts;
 
-    protected ArrayList<Questions> questions;
-    protected int currentQuestionIndex;
-    protected int score;
-    protected int correctAnswersCount;
-
-    public Quiz(ArrayList<Questions> questions) {
-
-        if (questions == null) {
-            throw new IllegalArgumentException(
-                    "Question list cannot be null.");
-        }
-
-        this.questions = new ArrayList<>(questions);
-        this.currentQuestionIndex = 0;
-        this.score = 0;
-        this.correctAnswersCount = 0;
+    public Quiz(String title) {
+        this.title = title;
     }
 
-    public Questions getCurrentQuestion() {
-        return questions.get(currentQuestionIndex);
+    public void addQuestion(Questions q) throws InvalidQuizSubmissionException {
+        if (q == null) {
+            throw new InvalidQuizSubmissionException("Cannot add an empty question to the quiz.");
+        }
+        questions.add(q);
     }
 
-    public boolean submitAnswer(String userAnswer) {
-
-        if (isFinished()) {
-            throw new InvalidQuizSubmissionException("Quiz is already finished.");
+    public void addAll(List<Questions> list) throws InvalidQuizSubmissionException {
+        for (Questions q : list) {
+            addQuestion(q);
         }
-
-        Questions currentQuestion = getCurrentQuestion();
-
-        if (optionIndex < 0 || optionIndex >= currentQuestion.getOptions().length) {
-            throw new InvalidQuizSubmissionException("Invalid option index: " + optionIndex);
-        }
-
-        boolean isCorrect = currentQuestion.checkAnswer(optionIndex);
-
-        if (isCorrect) {
-            score += 10;
-            correctAnswersCount++;
-        }
-
-        currentQuestionIndex++;
-
-        return isCorrect;
     }
 
-    public boolean isFinished() {
-        return currentQuestionIndex >= questions.size();
-    }
-
-    public double calculateAccuracy() {
-
+    // Throws if the quiz can't be started
+    protected void validateReady() throws InvalidQuizSubmissionException {
         if (questions.isEmpty()) {
-            return 0.0;
+            throw new InvalidQuizSubmissionException("The quiz has no questions yet.");
         }
-
-        return ((double) correctAnswersCount / questions.size()) * 100.0;
     }
 
-    public int getScore() {
-        return score;
+    // Checks the quiz and resets progress; returns false if it can't start
+    protected boolean prepare() {
+        try {
+            validateReady();
+            resetProgress();
+            return true;
+        } catch (InvalidQuizSubmissionException e) {
+            System.out.println("Cannot start: " + e.getMessage());
+            return false;
+        }
     }
 
-    public int getCorrectAnswersCount() {
-        return correctAnswersCount;
+    protected void resetProgress() {
+        score = 0;
+        attempts = 0;
     }
 
-    public int getTotalQuestions() {
-        return questions.size();
+    protected void recordResult(boolean correct) {
+        attempts++;
+        if (correct) {
+            score++;
+        }
+    }
+
+    @Override
+    public void play(Scanner input) {
+        if (!prepare()) return;
+
+        System.out.println("\n=== " + title + " ===");
+        for (Questions q : questions) {
+            recordResult(q.askQuestions(input));
+        }
+        showSummary();
+    }
+
+    protected void showSummary() {
+        System.out.println("\n--- Quiz Over! ---");
+        System.out.println("Score: " + score + "/" + questions.size());
+        System.out.printf("Accuracy: %.1f%%%n", getAccuracy());
+        System.out.println("XP Earned: " + getXpEarned());
+    }
+
+    @Override
+    public String getModeName() { return title; }
+
+    public int getScore() { return score; }
+
+    public int getAttempts() { return attempts; }
+
+    public int getTotalQuestions() { return questions.size(); }
+
+    public double getAccuracy() {
+        return attempts == 0 ? 0 : (score * 100.0) / attempts;
+    }
+
+    // Subclasses override this (polymorphism)
+    public int getXpEarned() {
+        return score * 10;
     }
 }

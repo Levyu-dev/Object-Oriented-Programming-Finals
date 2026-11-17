@@ -1,52 +1,117 @@
-import java.util.ArrayList;
-import java.util.HashMap;
+package Quiz;
 
-public class PartyMode {
-    private ArrayList<String> playerNames;
-    private HashMap<String, Integer> playerScores;
-    private int currentPlayerIndex;
-    private Quiz sharedQuiz;
+import java.util.*;
 
-    public PartyMode(ArrayList<String> playerNames, Quiz sharedQuiz) {
-        this.playerNames = playerNames;
-        this.sharedQuiz = sharedQuiz;
-        this.currentPlayerIndex = 0;
-        this.playerScores = new HashMap<>();
+public class PartyMode implements GameMode {
 
-        for (String name : playerNames) {
-            playerScores.put(name, 0);
+    // Inner class for each player in the party
+    private static class PartyPlayer {
+        private final String name;
+        private boolean alive = true;
+        private int score = 0;
+
+        PartyPlayer(String name) { this.name = name; }
+    }
+
+    private final List<Questions> questions;
+    private final List<PartyPlayer> players = new ArrayList<>();
+
+    public PartyMode(List<Questions> questions) {
+        this.questions = new ArrayList<>(questions);
+    }
+
+    public void addPlayer(String name) throws InvalidQuizSubmissionException {
+        if (name == null || name.trim().isEmpty()) {
+            throw new InvalidQuizSubmissionException("Player name cannot be blank.");
+        }
+        for (PartyPlayer p : players) {
+            if (p.name.equalsIgnoreCase(name.trim())) {
+                throw new InvalidQuizSubmissionException("The name '" + name + "' is already taken.");
+            }
+        }
+        players.add(new PartyPlayer(name.trim()));
+    }
+
+    @Override
+    public void play(Scanner input) {
+        if (players.size() < 2) {
+            System.out.println("Party Mode needs at least 2 players.");
+            return;
+        }
+        if (questions.isEmpty()) {
+            System.out.println("Party Mode has no questions.");
+            return;
+        }
+
+        Collections.shuffle(questions);
+        System.out.println("\n=== PARTY MODE ===");
+        System.out.println("Wrong answer = eliminated. Last player standing wins!");
+
+        int round = 1;
+        for (Questions q : questions) {
+            List<PartyPlayer> alive = getAlivePlayers();
+            if (alive.size() <= 1) break;
+
+            System.out.println("\n----- Round " + round + " (" + alive.size() + " players left) -----");
+
+            List<PartyPlayer> wrong = new ArrayList<>();
+            for (PartyPlayer p : alive) {
+                System.out.println("\n>> " + p.name + "'s turn (pass the keyboard!)");
+                q.showQuestions();
+                System.out.print("Enter your answer: ");
+                String answer = input.nextLine();
+
+                if (q.checkAnswer(answer)) {
+                    System.out.println("Correct!");
+                    p.score++;
+                } else {
+                    System.out.println("Wrong!");
+                    wrong.add(p);
+                }
+            }
+
+            System.out.println("\nThe correct answer was: " + q.correctAnswer);
+
+            if (wrong.size() == alive.size()) {
+                System.out.println("Everyone missed it! Nobody is eliminated this round.");
+            } else {
+                for (PartyPlayer p : wrong) {
+                    p.alive = false;
+                    System.out.println(p.name + " has been ELIMINATED!");
+                }
+            }
+            round++;
+        }
+
+        showResults();
+    }
+
+    private List<PartyPlayer> getAlivePlayers() {
+        List<PartyPlayer> alive = new ArrayList<>();
+        for (PartyPlayer p : players) {
+            if (p.alive) alive.add(p);
+        }
+        return alive;
+    }
+
+    private void showResults() {
+        List<PartyPlayer> alive = getAlivePlayers();
+        System.out.println("\n=== PARTY MODE OVER ===");
+        if (alive.size() == 1) {
+            System.out.println("WINNER: " + alive.get(0).name + "!");
+        } else {
+            System.out.print("Questions ran out! It's a tie between: ");
+            for (int i = 0; i < alive.size(); i++) {
+                System.out.print(alive.get(i).name + (i < alive.size() - 1 ? ", " : ""));
+            }
+            System.out.println();
+        }
+        System.out.println("\nFinal scores:");
+        for (PartyPlayer p : players) {
+            System.out.println(" - " + p.name + ": " + p.score + (p.alive ? "" : " (eliminated)"));
         }
     }
 
-    public String getCurrentPlayer() {
-        if (playerNames == null || playerNames.isEmpty()) {
-            return null;
-        }
-        return playerNames.get(currentPlayerIndex);
-    }
-
-    public boolean submitTurn(String userAnswer) {
-        if (sharedQuiz == null || sharedQuiz.isFinished()) {
-            return false;
-        }
-
-        String currentPlayer = getCurrentPlayer();
-        boolean isCorrect = sharedQuiz.submitAnswer(userAnswer);
-
-        if (isCorrect) {
-            int currentScore = playerScores.get(currentPlayer);
-            playerScores.put(currentPlayer, currentScore + 10);
-        }
-
-        currentPlayerIndex = (currentPlayerIndex + 1) % playerNames.size();
-        return isCorrect;
-    }
-
-    public HashMap<String, Integer> getPlayerScores() {
-        return playerScores;
-    }
-
-    public Quiz getSharedQuiz() {
-        return sharedQuiz;
-    }
+    @Override
+    public String getModeName() { return "Party Mode"; }
 }
