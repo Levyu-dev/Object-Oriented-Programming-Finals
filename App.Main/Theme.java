@@ -1,19 +1,21 @@
 package App;
 
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicProgressBarUI;
-import java.awt.*;
 
 public class Theme {
-    public static final Color BG_YELLOW = new Color(252, 215, 87);
-    public static final Color BG_CREAM = new Color(255, 252, 242);
-    public static final Color CARD_RED = new Color(193, 59, 27);
-    public static final Color CARD_RED_HOVER = new Color(162, 44, 17);
-    public static final Color TEXT_DARK = new Color(92, 28, 12);
+    // Palette Colors from Image (#d6fb00, #ecffb6, #00545f)
+    public static final Color BG_YELLOW = new Color(214, 251, 0);      // #d6fb00 (Bright Lime)
+    public static final Color BG_CREAM = new Color(236, 255, 182);     // #ecffb6 (Pale Lime)
+    public static final Color CARD_RED = new Color(0, 84, 95);         // #00545f (Deep Teal)
+    public static final Color CARD_RED_HOVER = new Color(0, 62, 70);   // Darker Teal for hover
+    public static final Color TEXT_DARK = new Color(0, 84, 95);        // #00545f (Deep Teal)
     public static final Color WHITE = Color.WHITE;
-    public static final Color SOFT_GRAY = new Color(245, 240, 230);
+    public static final Color SOFT_GRAY = new Color(224, 245, 168);    // Slightly deeper Pale Lime for hover
 
+    // Note: Method name kept as createRedButton so your existing UI calls don't break
     public static JButton createRedButton(String text) {
         JButton btn = new JButton(text) {
             @Override
@@ -44,7 +46,8 @@ public class Theme {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(getModel().isRollover() ? SOFT_GRAY : getBackground());
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 22, 22);
-                g2.setColor(new Color(225, 200, 170));
+                // Updated border to match the teal/lime palette
+                g2.setColor(new Color(0, 84, 95, 70)); 
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 22, 22);
                 g2.dispose();
                 super.paintComponent(g);
@@ -66,7 +69,8 @@ public class Theme {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(220, 180, 60));
+                // Updated drop-shadow accent to match the lime/teal palette
+                g2.setColor(new Color(175, 210, 0)); 
                 g2.fillOval(1, 2, getWidth() - 2, getHeight() - 2);
                 g2.setColor(getModel().isRollover() ? BG_CREAM : WHITE);
                 g2.fillOval(0, 0, getWidth() - 2, getHeight() - 2);
