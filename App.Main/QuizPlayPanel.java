@@ -20,11 +20,11 @@ public class QuizPlayPanel extends BaseScreen {
     public QuizPlayPanel(ApplicationController controller) {
         super(controller);
         setLayout(new BorderLayout(10, 10));
-        setBackground(Theme.BG_CREAM);
+        setBackground(Theme.PALE_LIME);
         setBorder(new EmptyBorder(14, 16, 14, 16));
 
         JPanel topPanel = new JPanel(new BorderLayout(4, 4));
-        topPanel.setBackground(Theme.BG_CREAM);
+        topPanel.setBackground(Theme.PALE_LIME);
 
         progressLabel = new JLabel("Question 1");
         progressLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
@@ -32,12 +32,12 @@ public class QuizPlayPanel extends BaseScreen {
 
         badgeLabel = new JLabel("OOP QUIZ");
         badgeLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
-        badgeLabel.setForeground(Theme.CARD_RED);
+        badgeLabel.setForeground(Theme.DEEP_TEAL);
 
         topPanel.add(progressLabel, BorderLayout.NORTH);
         topPanel.add(badgeLabel, BorderLayout.SOUTH);
 
-        JPanel questionCard = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+        JPanel questionCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
         questionCard.setLayout(new BorderLayout());
 
         questionArea = new JTextArea();
@@ -46,15 +46,15 @@ public class QuizPlayPanel extends BaseScreen {
         questionArea.setWrapStyleWord(true);
         questionArea.setFont(new Font("Monospaced", Font.BOLD, 12));
         questionArea.setForeground(Theme.TEXT_DARK);
-        questionArea.setBackground(Theme.BG_YELLOW);
+        questionArea.setBackground(Theme.SOFT_LIME_CARD);
 
         JScrollPane scroll = new JScrollPane(questionArea);
         scroll.setBorder(null);
-        scroll.getViewport().setBackground(Theme.BG_YELLOW);
+        scroll.getViewport().setBackground(Theme.SOFT_LIME_CARD);
         questionCard.add(scroll, BorderLayout.CENTER);
 
         answerContainer = new JPanel(new BorderLayout());
-        answerContainer.setBackground(Theme.BG_CREAM);
+        answerContainer.setBackground(Theme.PALE_LIME);
         answerContainer.setPreferredSize(new Dimension(0, 220));
 
         add(topPanel, BorderLayout.NORTH);
@@ -170,17 +170,17 @@ public class QuizPlayPanel extends BaseScreen {
         if (q instanceof MultipleChoiceQuestions) {
             List<String> choices = extractChoices((MultipleChoiceQuestions) q);
             JPanel btnGrid = new JPanel(new GridLayout(4, 1, 0, 8));
-            btnGrid.setBackground(Theme.BG_CREAM);
+            btnGrid.setBackground(Theme.PALE_LIME);
 
             for (String choice : choices) {
-                JButton btn = Theme.createRedButton("<html><div style='width:240px;'>" + choice + "</div></html>");
+                JButton btn = Theme.createPrimaryButton("<html><div style='width:240px;'>" + choice + "</div></html>");
                 String letter = choice.substring(0, 1);
                 btn.addActionListener(e -> submitAnswer(q, letter));
                 btnGrid.add(btn);
             }
             answerContainer.add(btnGrid, BorderLayout.CENTER);
         } else {
-            JPanel inputBox = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+            JPanel inputBox = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
             inputBox.setLayout(new BorderLayout(8, 8));
 
             JLabel prompt = new JLabel("Enter your answer:");
@@ -190,7 +190,7 @@ public class QuizPlayPanel extends BaseScreen {
             JTextField answerField = new JTextField();
             answerField.setFont(new Font("Monospaced", Font.PLAIN, 14));
 
-            JButton submitBtn = Theme.createRedButton("SUBMIT ANSWER");
+            JButton submitBtn = Theme.createPrimaryButton("SUBMIT ANSWER");
             submitBtn.setPreferredSize(new Dimension(0, 42));
             submitBtn.addActionListener(e -> submitAnswer(q, answerField.getText()));
 
@@ -215,9 +215,8 @@ public class QuizPlayPanel extends BaseScreen {
         } catch (Exception e) {
             // Fallback below
         }
-        return Arrays.asList("A", "B", "C", "D");
-    }
-
+return Arrays.asList("A", "B", "C", "D");
+}
 private void submitAnswer(Questions q, String userAnswer) {
 if (q.checkAnswer(userAnswer)) {
 score++;
