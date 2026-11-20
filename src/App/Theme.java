@@ -6,27 +6,35 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 
 public class Theme {
-    public static final Color BG_YELLOW = new Color(252, 215, 87);
-    public static final Color BG_CREAM = new Color(255, 252, 242);
-    public static final Color CARD_RED = new Color(193, 59, 27);
-    public static final Color CARD_RED_HOVER = new Color(162, 44, 17);
-    public static final Color TEXT_DARK = new Color(92, 28, 12);
+    // Balanced Lime & Deep Teal Palette (Neon replaced with fresh Pistachio-Lime)
+    public static final Color PALE_LIME = new Color(236, 255, 182);      // #ecffb6 (Soft Pale Lime Background)
+    public static final Color BRIGHT_LIME = new Color(184, 219, 72);     // #b8db48 (Calm Pistachio-Lime Accent)
+    public static final Color SOFT_LIME_CARD = new Color(224, 246, 162); // Soft Mint-Lime for Cards
+    public static final Color DEEP_TEAL = new Color(0, 84, 95);          // #00545f (Deep Teal)
+    public static final Color DEEP_TEAL_HOVER = new Color(0, 62, 70);    // Darker Teal for hover
+    public static final Color TEXT_DARK = new Color(0, 58, 66);          // Rich Deep Teal for crisp reading
     public static final Color WHITE = Color.WHITE;
-    public static final Color SOFT_GRAY = new Color(245, 240, 230);
 
-    public static JButton createRedButton(String text) {
+    // Compatibility Aliases
+    public static final Color BG_CREAM = PALE_LIME;          // #ecffb6 Main Background
+    public static final Color BG_YELLOW = SOFT_LIME_CARD;    // Card Surface
+    public static final Color CARD_RED = DEEP_TEAL;          // #00545f Primary Buttons & Hero Cards
+    public static final Color CARD_RED_HOVER = DEEP_TEAL_HOVER;
+    public static final Color SOFT_GRAY = new Color(210, 238, 140);
+
+    public static JButton createPrimaryButton(String text) {
         JButton btn = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getModel().isRollover() ? CARD_RED_HOVER : getBackground());
+                g2.setColor(getModel().isRollover() ? DEEP_TEAL_HOVER : getBackground());
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 22, 22);
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
-        btn.setBackground(CARD_RED);
+        btn.setBackground(DEEP_TEAL);
         btn.setForeground(WHITE);
         btn.setFont(new Font("SansSerif", Font.BOLD, 13));
         btn.setContentAreaFilled(false);
@@ -36,15 +44,19 @@ public class Theme {
         return btn;
     }
 
+    public static JButton createRedButton(String text) {
+        return createPrimaryButton(text);
+    }
+
     public static JButton createWhiteButton(String text) {
         JButton btn = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getModel().isRollover() ? SOFT_GRAY : getBackground());
+                g2.setColor(getModel().isRollover() ? BRIGHT_LIME : getBackground());
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 22, 22);
-                g2.setColor(new Color(225, 200, 170));
+                g2.setColor(new Color(0, 84, 95, 80));
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 22, 22);
                 g2.dispose();
                 super.paintComponent(g);
@@ -66,9 +78,9 @@ public class Theme {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(220, 180, 60));
+                g2.setColor(new Color(0, 84, 95, 45));
                 g2.fillOval(1, 2, getWidth() - 2, getHeight() - 2);
-                g2.setColor(getModel().isRollover() ? BG_CREAM : WHITE);
+                g2.setColor(getModel().isRollover() ? BRIGHT_LIME : WHITE);
                 g2.fillOval(0, 0, getWidth() - 2, getHeight() - 2);
                 g2.dispose();
                 super.paintComponent(g);

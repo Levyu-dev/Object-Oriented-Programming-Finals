@@ -1,4 +1,4 @@
-package App.main;
+package App;
 
 import java.util.*;
 

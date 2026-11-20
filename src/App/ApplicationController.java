@@ -51,11 +51,11 @@ public class ApplicationController extends JFrame {
 
     private JPanel buildMobileShell(SidebarNav sidebar, JPanel contentArea) {
         JPanel shell = new JPanel(new BorderLayout());
-        shell.setBackground(Theme.BG_CREAM);
+        shell.setBackground(Theme.PALE_LIME);
 
         JPanel topBar = new JPanel(new BorderLayout());
-        topBar.setBackground(Theme.BG_YELLOW);
-        topBar.setBorder(new EmptyBorder(6, 10, 6, 12));
+        topBar.setBackground(Theme.DEEP_TEAL);
+        topBar.setBorder(new EmptyBorder(8, 12, 8, 14));
 
         JButton toggleBtn = Theme.createWhiteButton("Menu");
         toggleBtn.setPreferredSize(new Dimension(65, 32));
@@ -67,7 +67,7 @@ public class ApplicationController extends JFrame {
 
         JLabel appTitle = new JLabel("Learn to Code", SwingConstants.RIGHT);
         appTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
-        appTitle.setForeground(Theme.TEXT_DARK);
+        appTitle.setForeground(Theme.BRIGHT_LIME);
 
         topBar.add(toggleBtn, BorderLayout.WEST);
         topBar.add(appTitle, BorderLayout.EAST);
@@ -112,11 +112,11 @@ public class ApplicationController extends JFrame {
 
     private JPanel createWelcomeScreen() {
         JPanel panel = new JPanel();
-        panel.setBackground(Theme.BG_YELLOW);
+        panel.setBackground(Theme.PALE_LIME);
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(new EmptyBorder(75, 35, 75, 35));
 
-        JPanel logoBox = Theme.createRoundedCard(Theme.CARD_RED, 0);
+        JPanel logoBox = Theme.createRoundedCard(Theme.DEEP_TEAL, 0);
         logoBox.setPreferredSize(new Dimension(75, 75));
         logoBox.setMaximumSize(new Dimension(75, 75));
         logoBox.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -132,22 +132,30 @@ public class ApplicationController extends JFrame {
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JPanel form = new JPanel(new GridLayout(4, 1, 0, 6));
-        form.setBackground(Theme.BG_YELLOW);
+        form.setBackground(Theme.PALE_LIME);
         form.setMaximumSize(new Dimension(280, 130));
+
+        JLabel nameLbl = new JLabel("Your Name / Username:");
+        nameLbl.setForeground(Theme.TEXT_DARK);
+        nameLbl.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+        JLabel secLbl = new JLabel("Class Section Code:");
+        secLbl.setForeground(Theme.TEXT_DARK);
+        secLbl.setFont(new Font("SansSerif", Font.BOLD, 12));
 
         JTextField nameField = new JTextField("Angel");
         JTextField sectionField = new JTextField("OOP101");
 
-        form.add(new JLabel("Your Name / Username:"));
+        form.add(nameLbl);
         form.add(nameField);
-        form.add(new JLabel("Class Section Code:"));
+        form.add(secLbl);
         form.add(sectionField);
 
         JPanel btnRow = new JPanel(new GridLayout(2, 1, 0, 12));
-        btnRow.setBackground(Theme.BG_YELLOW);
+        btnRow.setBackground(Theme.PALE_LIME);
         btnRow.setMaximumSize(new Dimension(280, 105));
 
-        JButton studentBtn = Theme.createRedButton("ENTER AS STUDENT");
+        JButton studentBtn = Theme.createPrimaryButton("ENTER AS STUDENT");
         studentBtn.addActionListener(e -> handleLogin(nameField.getText(), sectionField.getText(), false));
 
         JButton teacherBtn = Theme.createWhiteButton("ENTER AS TEACHER");

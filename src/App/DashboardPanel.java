@@ -12,30 +12,30 @@ public class DashboardPanel extends BaseScreen {
     public DashboardPanel(ApplicationController controller) {
         super(controller);
         setLayout(new BorderLayout(10, 10));
-        setBackground(Theme.BG_CREAM);
+        setBackground(Theme.PALE_LIME);
         setBorder(new EmptyBorder(14, 16, 14, 16));
 
         JPanel topBox = new JPanel();
         topBox.setLayout(new BoxLayout(topBox, BoxLayout.Y_AXIS));
-        topBox.setBackground(Theme.BG_CREAM);
+        topBox.setBackground(Theme.PALE_LIME);
 
         welcomeLabel = new JLabel("Welcome!");
         welcomeLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
         welcomeLabel.setForeground(Theme.TEXT_DARK);
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JPanel xpPanel = Theme.createRoundedCard(Theme.CARD_RED, 12);
+        JPanel xpPanel = Theme.createRoundedCard(Theme.DEEP_TEAL, 12);
         xpPanel.setLayout(new BorderLayout(6, 6));
         xpPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         xpLabel = new JLabel("Level 1 — 500 XP");
-        xpLabel.setForeground(Theme.WHITE);
+        xpLabel.setForeground(Theme.BRIGHT_LIME);
         xpLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
-        xpBar = Theme.createProgressBar(500, 2000, Theme.WHITE, new Color(140, 35, 12));
+        xpBar = Theme.createProgressBar(500, 2000, Theme.BRIGHT_LIME, new Color(0, 50, 58));
         xpPanel.add(xpLabel, BorderLayout.NORTH);
         xpPanel.add(xpBar, BorderLayout.CENTER);
 
-        JPanel continuePanel = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+        JPanel continuePanel = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
         continuePanel.setLayout(new BorderLayout(8, 8));
         continuePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -43,7 +43,7 @@ public class DashboardPanel extends BaseScreen {
         contTitle.setFont(new Font("SansSerif", Font.BOLD, 13));
         contTitle.setForeground(Theme.TEXT_DARK);
 
-        JButton resumeBtn = Theme.createRedButton("Resume (+100 XP)");
+        JButton resumeBtn = Theme.createPrimaryButton("Resume (+100 XP)");
         resumeBtn.setPreferredSize(new Dimension(0, 34));
         resumeBtn.addActionListener(e -> {
             controller.getSession().addXP(100);
@@ -52,7 +52,7 @@ public class DashboardPanel extends BaseScreen {
         });
 
         continuePanel.add(contTitle, BorderLayout.NORTH);
-        continuePanel.add(Theme.createProgressBar(6, 10, Theme.CARD_RED, Theme.WHITE), BorderLayout.CENTER);
+        continuePanel.add(Theme.createProgressBar(6, 10, Theme.DEEP_TEAL, Theme.WHITE), BorderLayout.CENTER);
         continuePanel.add(resumeBtn, BorderLayout.SOUTH);
 
         topBox.add(welcomeLabel);
@@ -62,18 +62,18 @@ public class DashboardPanel extends BaseScreen {
         topBox.add(continuePanel);
 
         JPanel quickGrid = new JPanel(new GridLayout(2, 2, 10, 10));
-        quickGrid.setBackground(Theme.BG_CREAM);
+        quickGrid.setBackground(Theme.PALE_LIME);
 
-        JButton b1 = Theme.createRedButton("<html><center><b>Practice</b><br><small>Own pace</small></center></html>");
+        JButton b1 = Theme.createPrimaryButton("<html><center><b>Practice</b><br><small>Own pace</small></center></html>");
         b1.addActionListener(e -> controller.showStudentScreen("PRACTICE"));
 
-        JButton b2 = Theme.createRedButton("<html><center><b>Timed Quiz</b><br><small>Beat clock</small></center></html>");
+        JButton b2 = Theme.createPrimaryButton("<html><center><b>Timed Quiz</b><br><small>Beat clock</small></center></html>");
         b2.addActionListener(e -> controller.launchQuizSession(5));
 
-        JButton b3 = Theme.createRedButton("<html><center><b>Final Boss</b><br><small>Big test</small></center></html>");
+        JButton b3 = Theme.createPrimaryButton("<html><center><b>Final Boss</b><br><small>Big test</small></center></html>");
         b3.addActionListener(e -> controller.launchQuizSession(10));
 
-        JButton b4 = Theme.createRedButton("<html><center><b>Party Mode</b><br><small>With friends</small></center></html>");
+        JButton b4 = Theme.createPrimaryButton("<html><center><b>Party Mode</b><br><small>With friends</small></center></html>");
         b4.addActionListener(e -> controller.showAlert("Starting Party Mode..."));
 
         quickGrid.add(b1);

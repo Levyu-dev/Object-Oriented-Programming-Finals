@@ -1,4 +1,4 @@
-package Quiz;
+package App;
 
 import javax.swing.SwingUtilities;
 
