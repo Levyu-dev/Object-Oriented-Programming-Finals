@@ -100,3 +100,4 @@ public class TeacherDashboardPanel extends BaseScreen {
         return box;
     }
 }
+
