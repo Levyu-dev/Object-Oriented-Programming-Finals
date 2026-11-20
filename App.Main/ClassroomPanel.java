@@ -1,4 +1,4 @@
-package App.main;
+package App;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -15,7 +15,7 @@ public class ClassroomPanel extends BaseScreen {
         this.isTeacher = isTeacher;
 
         setLayout(new BorderLayout(10, 10));
-        setBackground(Theme.BG_CREAM);
+        setBackground(Theme.PALE_LIME);
         setBorder(new EmptyBorder(14, 16, 14, 16));
 
         titleLabel = new JLabel("Classroom");
@@ -23,10 +23,10 @@ public class ClassroomPanel extends BaseScreen {
         titleLabel.setForeground(Theme.TEXT_DARK);
 
         JPanel stack = new JPanel(new GridLayout(2, 1, 0, 12));
-        stack.setBackground(Theme.BG_CREAM);
+        stack.setBackground(Theme.PALE_LIME);
 
         // Top Card: Section Activities
-        JPanel topCard = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+        JPanel topCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
         topCard.setLayout(new BorderLayout(6, 6));
 
         JLabel actHeader = new JLabel("Section Activities");
@@ -39,13 +39,15 @@ public class ClassroomPanel extends BaseScreen {
         assignmentList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         assignmentList.setBackground(Theme.WHITE);
         assignmentList.setForeground(Theme.TEXT_DARK);
+        assignmentList.setSelectionBackground(Theme.BRIGHT_LIME);
+        assignmentList.setSelectionForeground(Theme.TEXT_DARK);
 
         JScrollPane listScroll = new JScrollPane(assignmentList);
-        listScroll.setBorder(BorderFactory.createLineBorder(new Color(225, 200, 170)));
+        listScroll.setBorder(BorderFactory.createLineBorder(new Color(0, 84, 95, 60)));
         topCard.add(listScroll, BorderLayout.CENTER);
 
         if (!isTeacher) {
-            JButton startBtn = Theme.createRedButton("Start Selected Activity");
+            JButton startBtn = Theme.createPrimaryButton("Start Selected Activity");
             startBtn.setPreferredSize(new Dimension(0, 38));
             startBtn.addActionListener(e -> {
                 String selected = assignmentList.getSelectedValue();
@@ -60,7 +62,7 @@ public class ClassroomPanel extends BaseScreen {
         }
 
         // Bottom Card: Teacher Assignment Form OR Student Leaderboard
-        JPanel bottomCard = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+        JPanel bottomCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
         bottomCard.setLayout(new BorderLayout(6, 6));
 
         if (isTeacher) {
@@ -70,7 +72,7 @@ public class ClassroomPanel extends BaseScreen {
             bottomCard.add(formTitle, BorderLayout.NORTH);
 
             JPanel form = new JPanel(new GridLayout(4, 1, 0, 4));
-            form.setBackground(Theme.BG_YELLOW);
+            form.setBackground(Theme.SOFT_LIME_CARD);
 
             JLabel nameLbl = new JLabel("Activity Title:");
             nameLbl.setFont(new Font("SansSerif", Font.BOLD, 12));
@@ -92,7 +94,7 @@ public class ClassroomPanel extends BaseScreen {
             form.add(qField);
             bottomCard.add(form, BorderLayout.CENTER);
 
-            JButton postBtn = Theme.createRedButton("POST ASSIGNMENT");
+            JButton postBtn = Theme.createPrimaryButton("POST ASSIGNMENT");
             postBtn.setPreferredSize(new Dimension(0, 38));
             postBtn.addActionListener(e -> {
                 try {
@@ -131,7 +133,7 @@ public class ClassroomPanel extends BaseScreen {
             leaderboardArea.setBorder(new EmptyBorder(8, 10, 8, 10));
 
             JScrollPane boardScroll = new JScrollPane(leaderboardArea);
-            boardScroll.setBorder(BorderFactory.createLineBorder(new Color(225, 200, 170)));
+            boardScroll.setBorder(BorderFactory.createLineBorder(new Color(0, 84, 95, 60)));
             bottomCard.add(boardScroll, BorderLayout.CENTER);
         }
 
@@ -141,7 +143,6 @@ public class ClassroomPanel extends BaseScreen {
         add(stack, BorderLayout.CENTER);
     }
 
-    // Reads the number of questions from strings like "Lab 1: Classes (10 Questions)"
     private int extractQuestionCount(String activityText) {
         try {
             int open = activityText.lastIndexOf('(');
