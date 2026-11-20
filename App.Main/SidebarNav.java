@@ -46,3 +46,4 @@ public class SidebarNav extends JPanel {
         add(logoutBtn);
     }
 }
+
