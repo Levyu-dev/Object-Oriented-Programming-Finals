@@ -1,9 +1,9 @@
 package App;
 
-import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicProgressBarUI;
+import java.awt.*;
 
 public class Theme {
     // Palette Colors from Image (#d6fb00, #ecffb6, #00545f)
