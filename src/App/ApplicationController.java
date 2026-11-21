@@ -96,6 +96,21 @@ public class ApplicationController extends JFrame {
         showStudentScreen("QUIZ_PLAY");
     }
 
+    public void launchTimedQuiz(int questionCount) {
+        quizPlayPanel.startTimedQuiz(questionCount);
+        showStudentScreen("QUIZ_PLAY");
+    }
+
+    public void launchFinalBossQuiz(int questionCount) {
+        quizPlayPanel.startFinalBossQuiz(questionCount);
+        showStudentScreen("QUIZ_PLAY");
+    }
+
+    public void launchPartyQuiz(int questionCount) {
+        quizPlayPanel.startPartyQuiz(questionCount);
+        showStudentScreen("QUIZ_PLAY");
+    }
+
     public void launchTeacherQuiz(UserSession.TeacherQuiz quiz) {
         quizPlayPanel.startTeacherQuiz(quiz);
         showStudentScreen("QUIZ_PLAY");

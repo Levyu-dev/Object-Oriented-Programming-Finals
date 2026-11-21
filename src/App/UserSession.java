@@ -49,6 +49,19 @@ public class UserSession {
         public String getAssignmentLabel() { return title + " (" + questions.size() + " Questions)"; }
     }
 
+    public static class TeacherRecord {
+        private final String name;
+        private final String pin;
+
+        public TeacherRecord(String name, String pin) {
+            this.name = name;
+            this.pin = pin;
+        }
+
+        public String getName() { return name; }
+        public String getPin() { return pin; }
+    }
+
     public static class StudentRecord {
         private final String name;
         private final String section;
@@ -68,22 +81,9 @@ public class UserSession {
         public int getCompletedQuizzes() { return completedQuizzes; }
 
         public void addPoints(int points) {
-            this.xp += points;
-            this.completedQuizzes++;
+            xp += points;
+            completedQuizzes++;
         }
-    }
-
-    public static class TeacherRecord {
-        private final String name;
-        private final String pin;
-
-        public TeacherRecord(String name, String pin) {
-            this.name = name;
-            this.pin = pin;
-        }
-
-        public String getName() { return name; }
-        public String getPin() { return pin; }
     }
 
     private String currentUserName = "Student";

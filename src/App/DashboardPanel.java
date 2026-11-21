@@ -68,13 +68,13 @@ public class DashboardPanel extends BaseScreen {
         b1.addActionListener(e -> controller.showStudentScreen("PRACTICE"));
 
         JButton b2 = Theme.createPrimaryButton("<html><center><b>Timed Quiz</b><br><small>Beat clock</small></center></html>");
-        b2.addActionListener(e -> controller.launchQuizSession(5));
+        b2.addActionListener(e -> controller.launchTimedQuiz(5));
 
         JButton b3 = Theme.createPrimaryButton("<html><center><b>Final Boss</b><br><small>Big test</small></center></html>");
-        b3.addActionListener(e -> controller.launchQuizSession(10));
+        b3.addActionListener(e -> controller.launchFinalBossQuiz(10));
 
         JButton b4 = Theme.createPrimaryButton("<html><center><b>Party Mode</b><br><small>With friends</small></center></html>");
-        b4.addActionListener(e -> controller.showAlert("Starting Party Mode..."));
+        b4.addActionListener(e -> controller.launchPartyQuiz(5));
 
         quickGrid.add(b1);
         quickGrid.add(b2);

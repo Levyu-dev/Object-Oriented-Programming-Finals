@@ -1,6 +1,6 @@
 package App;
 
-import java.util.*;
+import java.util.Scanner;
 
 abstract class Questions {
     protected String questionText;
@@ -17,26 +17,30 @@ abstract class Questions {
         this.points = points;
     }
 
-    int getPoints() { return points; }
+    abstract void showQuestion();
 
-    abstract void showQuestions();
-
-    boolean askQuestions(Scanner input) {
-        showQuestions();
-        System.out.println("Enter your answer: ");
-        String userAnswer = input.nextLine();
-
-        if (checkAnswer(userAnswer)) {
-            System.out.println("Correct!");
-            return true;
-        } else {
-            System.out.println("Wrong Answer! The correct answer is " + correctAnswer);
-            return false;
-        }
+    boolean askQuestion(Scanner input) {
+        showQuestion();
+        System.out.print("Answer: ");
+        String answer = input.nextLine();
+        return checkAnswer(answer);
     }
 
-    protected boolean checkAnswer(String userAnswer) {
-        return userAnswer.trim().equalsIgnoreCase(correctAnswer.trim());
+    boolean checkAnswer(String answer) {
+        return answer != null
+                && answer.trim().equalsIgnoreCase(correctAnswer.trim());
+    }
+
+    String getQuestionText() {
+        return questionText;
+    }
+
+    String getCorrectAnswer() {
+        return correctAnswer;
+    }
+
+    int getPoints() {
+        return points;
     }
 }
 
@@ -49,7 +53,7 @@ class MultipleChoiceQuestions extends Questions {
 
     MultipleChoiceQuestions(String questionText, String[] choices, String correctAnswer, int points) {
         super(questionText, correctAnswer, points);
-        this.choices = choices;
+        this.choices = choices.clone();
     }
 
     String[] getChoices() {
@@ -57,10 +61,10 @@ class MultipleChoiceQuestions extends Questions {
     }
 
     @Override
-    void showQuestions() {
-        System.out.println("[MULTIPLE CHOICE] " + questionText);
-        for (String c : choices) {
-            System.out.println(c);
+    void showQuestion() {
+        System.out.println(questionText);
+        for (String choice : choices) {
+            System.out.println(choice);
         }
     }
 }
@@ -75,8 +79,8 @@ class IdentificationQuestions extends Questions {
     }
 
     @Override
-    void showQuestions() {
-        System.out.println("[IDENTIFICATION] " + questionText);
+    void showQuestion() {
+        System.out.println(questionText);
     }
 }
 
@@ -86,8 +90,8 @@ class CodeOutputQuestions extends Questions {
     }
 
     @Override
-    void showQuestions() {
-        System.out.println("\n[CODE TRACING] Enter the code's predicted output.\n" + questionText);
+    void showQuestion() {
+        System.out.println(questionText);
     }
 }
 
@@ -97,8 +101,8 @@ class CodeCompletionQuestions extends Questions {
     }
 
     @Override
-    void showQuestions() {
-        System.out.println("\n[CODE COMPLETION] Fill the missing keywords in the code to make it run.\n" + questionText);
+    void showQuestion() {
+        System.out.println(questionText);
     }
 }
 
@@ -108,7 +112,7 @@ class DebuggingQuestions extends Questions {
     }
 
     @Override
-    void showQuestions() {
-        System.out.println("\n[DEBUGGING] Find the errors present in the code and enter the right or missing code.\n" + questionText);
+    void showQuestion() {
+        System.out.println(questionText);
     }
 }

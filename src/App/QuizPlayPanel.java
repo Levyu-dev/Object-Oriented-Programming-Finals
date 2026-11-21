@@ -8,6 +8,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class QuizPlayPanel extends BaseScreen {
+    public enum QuizMode {
+        STANDARD,
+        TIMED,
+        FINAL_BOSS,
+        PARTY
+    }
+
     private List<Questions> activeQuestions = new ArrayList<>();
     private int currentIndex = 0;
     private int score = 0;
@@ -17,6 +24,13 @@ public class QuizPlayPanel extends BaseScreen {
     private JLabel badgeLabel;
     private JTextArea questionArea;
     private JPanel answerContainer;
+    private QuizMode mode = QuizMode.STANDARD;
+    private javax.swing.Timer timedQuizTimer;
+    private int secondsRemaining;
+    private int bossHp = 100;
+    private int playerHp = 100;
+    private final String[] partyPlayers = {"You", "Jumana", "Iyce"};
+    private int partyPlayerIndex;
 
     public QuizPlayPanel(ApplicationController controller) {
         super(controller);
@@ -64,90 +78,56 @@ public class QuizPlayPanel extends BaseScreen {
     }
 
     private List<Questions> buildTeammateQuestions() {
-        List<Questions> bank = new ArrayList<>();
-
-        bank.add(new MultipleChoiceQuestions(
-            "A method that calculates and returns a value.",
-            new String[]{"A) Void Method", "B) Value-returning method", "C) User-defined Method", "D) Equivalent Method"},
-            "B"
-        ));
-        bank.add(new MultipleChoiceQuestions(
-            "A keyword used to make a class inherit from another.",
-            new String[]{"A) super", "B) static", "C) override", "D) extends"},
-            "D"
-        ));
-        bank.add(new MultipleChoiceQuestions(
-            "This keyword is used so that variables are only visible to the class, its subclasses, and its package.",
-            new String[]{"A) public", "B) final", "C) protected", "D) private"},
-            "C"
-        ));
-        bank.add(new MultipleChoiceQuestions(
-            "How do you connect the child to its parent when making a UML diagram?",
-            new String[]{"A) Dashed line with hollow triangle", "B) Solid line with hollow triangle", "C) Solid line with bold triangle", "D) Dashed line with bold triangle"},
-            "B"
-        ));
-        bank.add(new MultipleChoiceQuestions(
-            "What does the final method do?",
-            new String[]{"A) It cannot be overridden", "B) It cannot be inherited", "C) Hides the parent method", "D) Hides the object"},
-            "A"
-        ));
-
-        bank.add(new IdentificationQuestions("A method override that resolves at runtime.", "dynamic method dispatch"));
-        bank.add(new IdentificationQuestions("What does Polymorphism mean?", "many forms"));
-        bank.add(new IdentificationQuestions("A concept that establishes a Parent-child relationship.", "Inheritance"));
-        bank.add(new IdentificationQuestions("A method that resolves at compile-time.", "Overloading"));
-        bank.add(new IdentificationQuestions("Hiding unnecessary details and showing only essential features.", "Abstraction"));
-
-        bank.add(new CodeOutputQuestions(
-            "class Low { Low() { System.out.println(1); } }\nclass High extends Low { High() { System.out.println(2); } }\nLow obj = new High();",
-            "12"
-        ));
-        bank.add(new CodeOutputQuestions(
-            "class Parent { String name = \"P\"; void show() { System.out.println(\"Parent\"); } }\nclass Child extends Parent { String name = \"C\"; void show() { System.out.println(\"Child\"); } }\nParent p = new Child();\nSystem.out.println(p.name);\np.show();",
-            "PChild"
-        ));
-        bank.add(new CodeOutputQuestions(
-            "abstract class CoffeeMachine {\n  final void makeCoffee() { System.out.println(\"Boil \"); brew(); }\n  abstract void brew();\n}\nclass Espresso extends CoffeeMachine {\n  void brew() { System.out.println(\"Pressurize \"); }\n}\nCoffeeMachine m = new Espresso();\nm.makeCoffee();",
-            "Boil Pressurize"
-        ));
-
-        bank.add(new CodeCompletionQuestions(
-            "Expected Outcome: Start Run.\nclass Vehicle { void start() { System.out.println(\"Start\"); } }\nclass Car ____ Vehicle {\n  void drive() { _____(); System.out.println(\"Run\"); }\n}",
-            "extends, super.start"
-        ));
-        bank.add(new CodeCompletionQuestions(
-            "Expected Outcome: Meow.\nclass Animal { void speak() { System.out.println(\"Sound\"); } }\nclass Cat extends Animal { void speak() { System.out.println(\"Meow\"); } }\n_____ pet = new ____();\npet.speak();",
-            "Animal, Cat"
-        ));
-        bank.add(new CodeCompletionQuestions(
-            "Expected Outcome: Draw Circle.\n_____ class Shape { _____ void draw(); }\nclass Circle extends Shape { void draw() { System.out.println(\"Draw Circle\"); } }",
-            "abstract, abstract"
-        ));
-
-        bank.add(new DebuggingQuestions(
-            "class Parent { Parent(String msg) { System.out.println(msg); } }\nclass Child extends Parent {\n  Child() { System.out.println(\"Child code\"); }\n}",
-            "super(msg);"
-        ));
-        bank.add(new DebuggingQuestions(
-            "class Employee { void work() { System.out.println(\"Working\"); } }\nclass Developer extends Employee { void code() { System.out.println(\"Coding\"); } }\nEmployee e = new Developer();\ne.code();",
-            "((Developer)e).code();"
-        ));
-        bank.add(new DebuggingQuestions(
-            "abstract class Device { private abstract void boot(); }\nclass Laptop extends Device { void boot() {} }",
-            "protected abstract void boot();"
-        ));
-
-        return bank;
+        return new ArrayList<>(QuizQuestionBank.createQuestions());
     }
 
     public void startQuiz(int count) {
+        mode = QuizMode.STANDARD;
+        startShuffledQuestions(count);
+    }
+
+    private void startShuffledQuestions(int count) {
         List<Questions> all = buildTeammateQuestions();
         Collections.shuffle(all);
         int limit = Math.min(count, all.size());
         startQuestions(new ArrayList<>(all.subList(0, limit)));
     }
 
+    public void startTimedQuiz(int count) {
+        mode = QuizMode.TIMED;
+        secondsRemaining = 60;
+        startShuffledQuestions(count);
+        badgeLabel.setText("TIMED QUIZ - 60 seconds");
+        if (timedQuizTimer != null) {
+            timedQuizTimer.stop();
+        }
+        timedQuizTimer = new javax.swing.Timer(1000, e -> {
+            secondsRemaining--;
+            if (secondsRemaining <= 0) {
+                timedQuizTimer.stop();
+                finishQuiz("Time is up!");
+            } else {
+                badgeLabel.setText("TIMED QUIZ - " + secondsRemaining + " seconds");
+            }
+        });
+        timedQuizTimer.start();
+    }
+
+    public void startFinalBossQuiz(int count) {
+        mode = QuizMode.FINAL_BOSS;
+        bossHp = 100;
+        playerHp = 100;
+        startShuffledQuestions(count);
+    }
+
+    public void startPartyQuiz(int count) {
+        mode = QuizMode.PARTY;
+        partyPlayerIndex = 0;
+        startShuffledQuestions(count);
+    }
+
     public void startTeacherQuiz(UserSession.TeacherQuiz quiz) {
+        mode = QuizMode.STANDARD;
         List<Questions> questions = new ArrayList<>();
         for (UserSession.TeacherQuestion question : quiz.getQuestions()) {
             if (question.getType() == UserSession.QuestionType.MULTIPLE_CHOICE) {
@@ -167,6 +147,9 @@ public class QuizPlayPanel extends BaseScreen {
     }
 
     private void startQuestions(List<Questions> questions) {
+        if (timedQuizTimer != null) {
+            timedQuizTimer.stop();
+        }
         activeQuestions = questions;
         currentIndex = 0;
         score = 0;
@@ -185,8 +168,18 @@ public class QuizPlayPanel extends BaseScreen {
         String questionType = q instanceof MultipleChoiceQuestions ? "MULTIPLE CHOICE"
                 : q instanceof IdentificationQuestions ? "SHORT ANSWER"
                 : q.getClass().getSimpleName().replace("Questions", "").toUpperCase();
-        badgeLabel.setText(questionType + " - " + q.getPoints() + " POINTS");
-        questionArea.setText(q.questionText);
+        String modeLabel = mode == QuizMode.TIMED ? "TIMED"
+                : mode == QuizMode.FINAL_BOSS ? "FINAL BOSS"
+                : mode == QuizMode.PARTY ? "PARTY - " + partyPlayers[partyPlayerIndex]
+                : "OOP QUIZ";
+        if (mode == QuizMode.TIMED) {
+            badgeLabel.setText(modeLabel + " - " + secondsRemaining + " seconds");
+        } else if (mode == QuizMode.FINAL_BOSS) {
+            badgeLabel.setText(modeLabel + " - Boss " + bossHp + " HP / You " + playerHp + " HP");
+        } else {
+            badgeLabel.setText(modeLabel + " - " + questionType + " - " + q.getPoints() + " POINTS");
+        }
+        questionArea.setText(q.getQuestionText());
         questionArea.setCaretPosition(0);
 
         answerContainer.removeAll();
@@ -228,12 +221,28 @@ public class QuizPlayPanel extends BaseScreen {
     }
 
     private void submitAnswer(Questions question, String userAnswer) {
-        if (question.checkAnswer(userAnswer)) {
+        boolean correct = question.checkAnswer(userAnswer);
+        if (correct) {
             score++;
             earnedXP += question.getPoints();
             controller.showAlert("Correct! (+" + question.getPoints() + " points)");
+            if (mode == QuizMode.FINAL_BOSS) {
+                bossHp = Math.max(0, bossHp - 20);
+            }
         } else {
-            controller.showError("Wrong Answer! The correct answer is: " + question.correctAnswer);
+            controller.showError("Wrong Answer! The correct answer is: " + question.getCorrectAnswer());
+            if (mode == QuizMode.FINAL_BOSS) {
+                playerHp = Math.max(0, playerHp - 15);
+            }
+        }
+
+        if (mode == QuizMode.PARTY) {
+            partyPlayerIndex = (partyPlayerIndex + 1) % partyPlayers.length;
+        }
+
+        if (mode == QuizMode.FINAL_BOSS && (bossHp == 0 || playerHp == 0)) {
+            finishQuiz(bossHp == 0 ? "You defeated the final boss!" : "The boss defeated you!");
+            return;
         }
 
         currentIndex++;
@@ -242,8 +251,15 @@ public class QuizPlayPanel extends BaseScreen {
             return;
         }
 
+        finishQuiz("Quiz complete!");
+    }
+
+    private void finishQuiz(String prefix) {
+        if (timedQuizTimer != null) {
+            timedQuizTimer.stop();
+        }
         controller.getSession().addXP(earnedXP);
-        controller.showAlert("Quiz Over!\nYour Final Score: " + score + "/" + activeQuestions.size()
+        controller.showAlert(prefix + "\nYour Final Score: " + score + "/" + activeQuestions.size()
                 + "\nEarned: +" + earnedXP + " points");
         controller.showStudentScreen("STUDENT_DASH");
     }
