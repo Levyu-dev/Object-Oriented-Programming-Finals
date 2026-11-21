@@ -53,7 +53,7 @@ public class ApplicationController extends JFrame {
         JPanel shell = new JPanel(new BorderLayout());
         shell.setBackground(Theme.PALE_LIME);
 
-        JPanel topBar = new JPanel(new BorderLayout());
+        JPanel topBar = new JPanel(new BorderLayout());    
         topBar.setBackground(Theme.DEEP_TEAL);
         topBar.setBorder(new EmptyBorder(8, 12, 8, 14));
 
