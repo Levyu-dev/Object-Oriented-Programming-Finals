@@ -20,7 +20,7 @@ public class DashboardPanel extends BaseScreen {
         topBox.setBackground(Theme.PALE_LIME);
 
         welcomeLabel = new JLabel("Welcome!");
-        welcomeLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+        welcomeLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 20));
         welcomeLabel.setForeground(Theme.TEXT_DARK);
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -30,7 +30,7 @@ public class DashboardPanel extends BaseScreen {
 
         xpLabel = new JLabel("Level 1 — 500 XP");
         xpLabel.setForeground(Theme.BRIGHT_LIME);
-        xpLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        xpLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 13));
         xpBar = Theme.createProgressBar(500, 2000, Theme.BRIGHT_LIME, new Color(0, 50, 58));
         xpPanel.add(xpLabel, BorderLayout.NORTH);
         xpPanel.add(xpBar, BorderLayout.CENTER);
@@ -40,7 +40,7 @@ public class DashboardPanel extends BaseScreen {
         continuePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel contTitle = new JLabel("Continue: OOP Basics (6/10)");
-        contTitle.setFont(new Font("SansSerif", Font.BOLD, 13));
+        contTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 13));
         contTitle.setForeground(Theme.TEXT_DARK);
 
         JButton resumeBtn = Theme.createPrimaryButton("Resume (+100 XP)");

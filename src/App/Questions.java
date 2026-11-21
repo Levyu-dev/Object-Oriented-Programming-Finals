@@ -5,11 +5,19 @@ import java.util.*;
 abstract class Questions {
     protected String questionText;
     protected String correctAnswer;
+    private final int points;
 
     Questions(String questionText, String correctAnswer) {
+        this(questionText, correctAnswer, 50);
+    }
+
+    Questions(String questionText, String correctAnswer, int points) {
         this.questionText = questionText;
         this.correctAnswer = correctAnswer;
+        this.points = points;
     }
+
+    int getPoints() { return points; }
 
     abstract void showQuestions();
 
@@ -28,16 +36,24 @@ abstract class Questions {
     }
 
     protected boolean checkAnswer(String userAnswer) {
-        return userAnswer.equalsIgnoreCase(correctAnswer);
+        return userAnswer.trim().equalsIgnoreCase(correctAnswer.trim());
     }
 }
 
 class MultipleChoiceQuestions extends Questions {
-    private String[] choices;
+    private final String[] choices;
 
     MultipleChoiceQuestions(String questionText, String[] choices, String correctAnswer) {
-        super(questionText, correctAnswer);
+        this(questionText, choices, correctAnswer, 50);
+    }
+
+    MultipleChoiceQuestions(String questionText, String[] choices, String correctAnswer, int points) {
+        super(questionText, correctAnswer, points);
         this.choices = choices;
+    }
+
+    String[] getChoices() {
+        return choices.clone();
     }
 
     @Override
@@ -52,6 +68,10 @@ class MultipleChoiceQuestions extends Questions {
 class IdentificationQuestions extends Questions {
     IdentificationQuestions(String questionText, String correctAnswer) {
         super(questionText, correctAnswer);
+    }
+
+    IdentificationQuestions(String questionText, String correctAnswer, int points) {
+        super(questionText, correctAnswer, points);
     }
 
     @Override

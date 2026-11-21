@@ -66,7 +66,7 @@ public class ApplicationController extends JFrame {
         });
 
         JLabel appTitle = new JLabel("Learn to Code", SwingConstants.RIGHT);
-        appTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
+        appTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
         appTitle.setForeground(Theme.BRIGHT_LIME);
 
         topBar.add(toggleBtn, BorderLayout.WEST);
@@ -96,6 +96,11 @@ public class ApplicationController extends JFrame {
         showStudentScreen("QUIZ_PLAY");
     }
 
+    public void launchTeacherQuiz(UserSession.TeacherQuiz quiz) {
+        quizPlayPanel.startTeacherQuiz(quiz);
+        showStudentScreen("QUIZ_PLAY");
+    }
+
     public void showStudentScreen(String name) {
         studentDash.refresh();
         studentClass.refresh();
@@ -122,12 +127,12 @@ public class ApplicationController extends JFrame {
         logoBox.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel title = new JLabel("Learn to Code.");
-        title.setFont(new Font("SansSerif", Font.BOLD, 34));
+        title.setFont(new Font(Theme.UI_FONT, Font.BOLD, 34));
         title.setForeground(Theme.TEXT_DARK);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel subtitle = new JLabel("Your coding journey starts here");
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        subtitle.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 14));
         subtitle.setForeground(Theme.TEXT_DARK);
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -137,14 +142,16 @@ public class ApplicationController extends JFrame {
 
         JLabel nameLbl = new JLabel("Your Name / Username:");
         nameLbl.setForeground(Theme.TEXT_DARK);
-        nameLbl.setFont(new Font("SansSerif", Font.BOLD, 12));
+        nameLbl.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
 
         JLabel secLbl = new JLabel("Class Section Code:");
         secLbl.setForeground(Theme.TEXT_DARK);
-        secLbl.setFont(new Font("SansSerif", Font.BOLD, 12));
+        secLbl.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
 
         JTextField nameField = new JTextField("Angel");
         JTextField sectionField = new JTextField("OOP101");
+        Theme.styleTextField(nameField);
+        Theme.styleTextField(sectionField);
 
         form.add(nameLbl);
         form.add(nameField);

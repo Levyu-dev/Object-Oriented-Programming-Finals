@@ -7,7 +7,7 @@ import java.awt.*;
 public class SidebarNav extends JPanel {
 
     public SidebarNav(ApplicationController controller, boolean isTeacher) {
-        setBackground(Theme.BG_YELLOW);
+        setBackground(Theme.SOFT_LIME_CARD);
         setPreferredSize(new Dimension(62, 0));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(new EmptyBorder(20, 8, 20, 8));

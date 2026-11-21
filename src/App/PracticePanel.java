@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PracticePanel extends BaseScreen {
-    private String selectedTopic = "Java Basics";
-
     public PracticePanel(ApplicationController controller) {
         super(controller);
         setLayout(new BorderLayout(10, 10));
@@ -17,7 +15,7 @@ public class PracticePanel extends BaseScreen {
         setBorder(new EmptyBorder(14, 16, 14, 16));
 
         JLabel header = new JLabel("Practice Setup");
-        header.setFont(new Font("SansSerif", Font.BOLD, 20));
+        header.setFont(new Font(Theme.UI_FONT, Font.BOLD, 20));
         header.setForeground(Theme.TEXT_DARK);
 
         JPanel center = new JPanel();
@@ -38,7 +36,6 @@ public class PracticePanel extends BaseScreen {
                 btn.setForeground(Theme.TEXT_DARK);
             }
             btn.addActionListener(e -> {
-                selectedTopic = topic;
                 for (JButton b : buttons) {
                     b.setBackground(Theme.DEEP_TEAL);
                     b.setForeground(Theme.WHITE);
@@ -56,14 +53,16 @@ public class PracticePanel extends BaseScreen {
         diffBox.addItem("Easy");
         diffBox.addItem("Medium");
         diffBox.addItem("Hard");
+        Theme.styleComboBox(diffBox);
 
         JTextField countField = new JTextField("5");
+        Theme.styleTextField(countField);
 
         JLabel dLabel = new JLabel("Difficulty:");
-        dLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        dLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
         dLabel.setForeground(Theme.TEXT_DARK);
         JLabel qLabel = new JLabel("Questions (1-19):");
-        qLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        qLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
         qLabel.setForeground(Theme.TEXT_DARK);
 
         optionsCard.add(dLabel);

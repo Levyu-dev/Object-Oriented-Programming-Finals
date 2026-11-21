@@ -6,6 +6,8 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 
 public class Theme {
+    public static final String UI_FONT = "Segoe UI";
+
     // Balanced Lime & Deep Teal Palette (Neon replaced with fresh Pistachio-Lime)
     public static final Color PALE_LIME = new Color(236, 255, 182);      // #ecffb6 (Soft Pale Lime Background)
     public static final Color BRIGHT_LIME = new Color(184, 219, 72);     // #b8db48 (Calm Pistachio-Lime Accent)
@@ -14,13 +16,38 @@ public class Theme {
     public static final Color DEEP_TEAL_HOVER = new Color(0, 62, 70);    // Darker Teal for hover
     public static final Color TEXT_DARK = new Color(0, 58, 66);          // Rich Deep Teal for crisp reading
     public static final Color WHITE = Color.WHITE;
+    public static final Color INPUT_BACKGROUND = new Color(250, 252, 243);
+    public static final Color INPUT_BORDER = new Color(0, 84, 95, 90);
 
-    // Compatibility Aliases
-    public static final Color BG_CREAM = PALE_LIME;          // #ecffb6 Main Background
-    public static final Color BG_YELLOW = SOFT_LIME_CARD;    // Card Surface
-    public static final Color CARD_RED = DEEP_TEAL;          // #00545f Primary Buttons & Hero Cards
-    public static final Color CARD_RED_HOVER = DEEP_TEAL_HOVER;
-    public static final Color SOFT_GRAY = new Color(210, 238, 140);
+    public static void styleTextField(JTextField field) {
+        field.setFont(new Font(UI_FONT, Font.PLAIN, 14));
+        field.setForeground(TEXT_DARK);
+        field.setBackground(INPUT_BACKGROUND);
+        field.setCaretColor(DEEP_TEAL);
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(INPUT_BORDER),
+                new EmptyBorder(6, 9, 6, 9)));
+    }
+
+    public static void styleComboBox(JComboBox<?> comboBox) {
+        comboBox.setFont(new Font(UI_FONT, Font.PLAIN, 14));
+        comboBox.setForeground(TEXT_DARK);
+        comboBox.setBackground(INPUT_BACKGROUND);
+        comboBox.setBorder(BorderFactory.createLineBorder(INPUT_BORDER));
+        comboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(
+                        list, value, index, isSelected, cellHasFocus);
+                label.setFont(new Font(UI_FONT, Font.PLAIN, 14));
+                label.setForeground(TEXT_DARK);
+                label.setBackground(isSelected ? BRIGHT_LIME : INPUT_BACKGROUND);
+                label.setBorder(new EmptyBorder(6, 9, 6, 9));
+                return label;
+            }
+        });
+    }
 
     public static JButton createPrimaryButton(String text) {
         JButton btn = new JButton(text) {
@@ -36,16 +63,12 @@ public class Theme {
         };
         btn.setBackground(DEEP_TEAL);
         btn.setForeground(WHITE);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 13));
+        btn.setFont(new Font(UI_FONT, Font.BOLD, 13));
         btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
-    }
-
-    public static JButton createRedButton(String text) {
-        return createPrimaryButton(text);
     }
 
     public static JButton createWhiteButton(String text) {
@@ -64,7 +87,7 @@ public class Theme {
         };
         btn.setBackground(WHITE);
         btn.setForeground(TEXT_DARK);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btn.setFont(new Font(UI_FONT, Font.BOLD, 12));
         btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
@@ -88,7 +111,7 @@ public class Theme {
         };
         btn.setPreferredSize(new Dimension(46, 46));
         btn.setMaximumSize(new Dimension(46, 46));
-        btn.setFont(new Font("SansSerif", Font.BOLD, 10));
+        btn.setFont(new Font(UI_FONT, Font.BOLD, 10));
         btn.setForeground(TEXT_DARK);
         btn.setToolTipText(tooltip);
         btn.setContentAreaFilled(false);

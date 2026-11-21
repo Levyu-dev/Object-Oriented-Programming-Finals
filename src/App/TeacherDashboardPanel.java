@@ -14,20 +14,20 @@ public class TeacherDashboardPanel extends BaseScreen {
     public TeacherDashboardPanel(ApplicationController controller) {
         super(controller);
         setLayout(new BorderLayout(10, 10));
-        setBackground(Theme.BG_CREAM);
+        setBackground(Theme.PALE_LIME);
         setBorder(new EmptyBorder(14, 16, 14, 16));
 
         JPanel topBox = new JPanel();
         topBox.setLayout(new BoxLayout(topBox, BoxLayout.Y_AXIS));
-        topBox.setBackground(Theme.BG_CREAM);
+        topBox.setBackground(Theme.PALE_LIME);
 
         welcomeLabel = new JLabel("Instructor Portal");
-        welcomeLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        welcomeLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 18));
         welcomeLabel.setForeground(Theme.TEXT_DARK);
         welcomeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel statsGrid = new JPanel(new GridLayout(1, 2, 10, 0));
-        statsGrid.setBackground(Theme.BG_CREAM);
+        statsGrid.setBackground(Theme.PALE_LIME);
         statsGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel countCard = createStatBox("0 Students", "Enrolled");
@@ -39,24 +39,32 @@ public class TeacherDashboardPanel extends BaseScreen {
         topBox.add(Box.createVerticalStrut(10));
         topBox.add(statsGrid);
 
-        JPanel gradebookPanel = Theme.createRoundedCard(Theme.BG_YELLOW, 12);
+        JPanel gradebookPanel = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
         gradebookPanel.setLayout(new BorderLayout(6, 6));
 
         JLabel tableTitle = new JLabel("Student Roster & XP");
-        tableTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
+        tableTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
         tableTitle.setForeground(Theme.TEXT_DARK);
 
         tableModel = new DefaultTableModel(0, 4);
         tableModel.setColumnIdentifiers(new Object[]{"Student", "Lvl", "XP", "Done"});
         JTable studentTable = new JTable(tableModel);
         studentTable.setRowHeight(26);
-        studentTable.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        studentTable.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 13));
+        studentTable.setBackground(Theme.INPUT_BACKGROUND);
+        studentTable.setForeground(Theme.TEXT_DARK);
+        studentTable.setGridColor(Theme.INPUT_BORDER);
+        studentTable.setSelectionBackground(Theme.BRIGHT_LIME);
+        studentTable.setSelectionForeground(Theme.TEXT_DARK);
+        studentTable.getTableHeader().setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
+        studentTable.getTableHeader().setBackground(Theme.DEEP_TEAL);
+        studentTable.getTableHeader().setForeground(Theme.WHITE);
         studentTable.setEnabled(false);
 
         gradebookPanel.add(tableTitle, BorderLayout.NORTH);
         gradebookPanel.add(new JScrollPane(studentTable), BorderLayout.CENTER);
 
-        JButton manageBtn = Theme.createRedButton("Post Class Assignments →");
+        JButton manageBtn = Theme.createPrimaryButton("Create Quiz for Students →");
         manageBtn.setPreferredSize(new Dimension(0, 42));
         manageBtn.addActionListener(e -> controller.showTeacherScreen("TEACHER_CLASS"));
 
@@ -82,16 +90,16 @@ public class TeacherDashboardPanel extends BaseScreen {
     }
 
     private JPanel createStatBox(String big, String small) {
-        JPanel box = Theme.createRoundedCard(Theme.CARD_RED, 12);
+        JPanel box = Theme.createRoundedCard(Theme.DEEP_TEAL, 12);
         box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
 
         JLabel l1 = new JLabel(big);
-        l1.setFont(new Font("SansSerif", Font.BOLD, 16));
+        l1.setFont(new Font(Theme.UI_FONT, Font.BOLD, 16));
         l1.setForeground(Theme.WHITE);
         l1.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel l2 = new JLabel(small);
-        l2.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        l2.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 11));
         l2.setForeground(Theme.WHITE);
         l2.setAlignmentX(Component.CENTER_ALIGNMENT);
 
