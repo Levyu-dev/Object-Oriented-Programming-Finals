@@ -1,5 +1,4 @@
 package Quiz;
-
 import java.util.*;
 
 public class TimedQuiz extends Quiz {
@@ -36,9 +35,8 @@ public class TimedQuiz extends Quiz {
             System.out.println("\nTime left: " + (remaining / 1000) + "s");
             boolean correct = q.askQuestions(input);
 
-            // An answer submitted after the deadline doesn't count
             if (System.currentTimeMillis() - start > limitMs) {
-                System.out.println("Too late! That answer doesn't count.");
+                System.out.println("(Too late! That answer doesn't count, even if it was correct.)");
                 recordResult(false);
                 finishedInTime = false;
                 break;
@@ -49,17 +47,25 @@ public class TimedQuiz extends Quiz {
         showSummary();
     }
 
+    private boolean earnedBonus() {
+        return finishedInTime && getScore() > 0;
+    }
+
     @Override
     protected void showSummary() {
         super.showSummary();
-        System.out.println(finishedInTime
-                ? "You finished before the timer ran out! (+20 bonus XP)"
-                : "You ran out of time.");
+        if (!finishedInTime) {
+            System.out.println("You ran out of time.");
+        } else if (earnedBonus()) {
+            System.out.println("You finished before the timer ran out! (+20 bonus XP included)");
+        } else {
+            System.out.println("You finished in time, but with no correct answers there is no bonus.");
+        }
     }
 
     @Override
     public int getXpEarned() {
-        return super.getXpEarned() + (finishedInTime ? 20 : 0);
+        return super.getXpEarned() + (earnedBonus() ? 20 : 0);
     }
 
     public int getTimeLimitSeconds() { return timeLimitSeconds; }

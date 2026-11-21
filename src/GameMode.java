@@ -1,5 +1,4 @@
 package Quiz;
-
 import java.util.Scanner;
 
 public interface GameMode {

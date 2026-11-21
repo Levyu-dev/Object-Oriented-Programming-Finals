@@ -1,5 +1,4 @@
 package Quiz;
-
 import java.util.*;
 
 public class Main {
@@ -51,8 +50,15 @@ public class Main {
                             break;
                         }
                         for (int i = 1; i <= n; i++) {
-                            System.out.print("Name of player " + i + ": ");
-                            party.addPlayer(input.nextLine());
+                            while (true) {
+                                System.out.print("Name of player " + i + ": ");
+                                try {
+                                    party.addPlayer(input.nextLine());
+                                    break;
+                                } catch (InvalidQuizSubmissionException e) {
+                                    System.out.println(e.getMessage() + " Try again.");
+                                }
+                            }
                         }
                         party.play(input);
                         break;
@@ -73,24 +79,42 @@ public class Main {
         input.close();
     }
 
-
     private static List<Questions> loadQuestions() {
         List<Questions> bank = new ArrayList<>();
 
         bank.add(new MultipleChoiceQuestions("A keyword used to make a class inherit from another.",
                 new String[] {"A) super", "B) static", "C) override", "D) extends"}, "D"));
         bank.add(new MultipleChoiceQuestions("What does the final method do?",
-                new String[] {"A) It cannot be overriden", "B) It cannot be inherited", "C) Hides the parent method", "D) Hides the object"}, "A"));
+                new String[] {"A) It cannot be overridden", "B) It cannot be inherited", "C) Hides the parent method", "D) Hides the object"}, "A"));
 
         bank.add(new IdentificationQuestions("What does Polymorphism mean?", "many forms"));
         bank.add(new IdentificationQuestions("A method that resolves at compile-time.", "Overloading"));
         bank.add(new IdentificationQuestions("A concept that establishes a Parent-child relationship", "Inheritance"));
 
-        bank.add(new CodeOutputQuestions("class Low { Low() { System.out.println(1); }}\n class High extends Low { High() { System.out.println(2); } }\n Low obj = new High();", "12"));
+        bank.add(new CodeOutputQuestions(
+                "class Low { Low() { System.out.println(1); } }\n"
+                + "class High extends Low { High() { System.out.println(2); } }\n"
+                + "Low obj = new High();", "12"));
 
-        bank.add(new CodeCompletionQuestions("Expected Outcome: Meow.\n class Animal {\n void speak() { System.out.println(Sound); }\n}\n class Cat extends Animal {\n void speak() { System.out.println(Meow); }\n}\n _____ pet = new ____();\n pet.speak();", "Animal, Cat"));
+        bank.add(new CodeCompletionQuestions(
+                "Expected Outcome: Meow.\n"
+                + "class Animal {\n void speak() { System.out.println(\"Sound\"); }\n}\n"
+                + "class Cat extends Animal {\n void speak() { System.out.println(\"Meow\"); }\n}\n"
+                + "_____ pet = new _____();\npet.speak();", "Animal, Cat"));
 
-        bank.add(new DebuggingQuestions("abstract class Device {\n private abstract void boot();\n }\n class Laptop extends Device {\n void boot()\n }", "protected abstract void boot();"));
+        bank.add(new DebuggingQuestions(
+                "class Parent {\n Parent(String msg) { System.out.println(msg); }\n}\n"
+                + "class Child extends Parent {\n Child(String msg) {\n  System.out.println(\"Child code\");\n }\n}",
+                "super(msg);"));
+        bank.add(new DebuggingQuestions(
+                "class Employee {\n void work() { System.out.println(\"Working\"); }\n}\n"
+                + "class Developer extends Employee {\n void code() { System.out.println(\"Coding\"); }\n}\n"
+                + "Employee e = new Developer();\ne.code();",
+                "((Developer)e).code();"));
+        bank.add(new DebuggingQuestions(
+                "abstract class Device {\n private abstract void boot();\n}\n"
+                + "class Laptop extends Device {\n protected void boot() { }\n}",
+                "protected abstract void boot();"));
 
         return bank;
     }

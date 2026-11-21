@@ -1,5 +1,4 @@
 package Quiz;
-
 import java.util.*;
 
 public class FinalBossChallenge extends Quiz {
@@ -14,6 +13,9 @@ public class FinalBossChallenge extends Quiz {
 
     public FinalBossChallenge(String bossName, int bossMaxHealth, int damagePerHit, int startingLives) {
         super("FINAL BOSS: " + bossName);
+        if (bossMaxHealth <= 0 || damagePerHit <= 0 || startingLives <= 0) {
+            throw new IllegalArgumentException("Boss stats must be greater than 0.");
+        }
         this.bossName = bossName;
         this.bossMaxHealth = bossMaxHealth;
         this.damagePerHit = damagePerHit;

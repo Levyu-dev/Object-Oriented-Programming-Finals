@@ -1,10 +1,8 @@
 package Quiz;
-
 import java.util.*;
 
 public class PartyMode implements GameMode {
 
-    // Inner class for each player in the party
     private static class PartyPlayer {
         private final String name;
         private boolean alive = true;
@@ -26,7 +24,7 @@ public class PartyMode implements GameMode {
         }
         for (PartyPlayer p : players) {
             if (p.name.equalsIgnoreCase(name.trim())) {
-                throw new InvalidQuizSubmissionException("The name '" + name + "' is already taken.");
+                throw new InvalidQuizSubmissionException("The name '" + name.trim() + "' is already taken.");
             }
         }
         players.add(new PartyPlayer(name.trim()));
@@ -62,15 +60,18 @@ public class PartyMode implements GameMode {
                 String answer = input.nextLine();
 
                 if (q.checkAnswer(answer)) {
-                    System.out.println("Correct!");
                     p.score++;
                 } else {
-                    System.out.println("Wrong!");
                     wrong.add(p);
                 }
+                hideScreen();
             }
 
-            System.out.println("\nThe correct answer was: " + q.correctAnswer);
+            System.out.println("----- Round " + round + " results -----");
+            System.out.println("The correct answer was: " + q.correctAnswer);
+            for (PartyPlayer p : alive) {
+                System.out.println(" - " + p.name + ": " + (wrong.contains(p) ? "Wrong" : "Correct"));
+            }
 
             if (wrong.size() == alive.size()) {
                 System.out.println("Everyone missed it! Nobody is eliminated this round.");
@@ -84,6 +85,10 @@ public class PartyMode implements GameMode {
         }
 
         showResults();
+    }
+
+    private void hideScreen() {
+        for (int i = 0; i < 40; i++) System.out.println();
     }
 
     private List<PartyPlayer> getAlivePlayers() {
