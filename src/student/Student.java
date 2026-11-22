@@ -54,7 +54,6 @@ public class Student {
 
         PerformanceRecord record = null;
 
-        // Check if topic already exists
         for (PerformanceRecord p : performanceRecords) {
             if (p.getTopic().equalsIgnoreCase(topic)) {
                 record = p;
@@ -62,13 +61,11 @@ public class Student {
             }
         }
 
-        // Create new record if topic does not exist
         if (record == null) {
             record = new PerformanceRecord(topic);
             performanceRecords.add(record);
         }
 
-        // Record result and award XP only if successful
         if (record.addResult(correctAnswers, totalQuestions)) {
             addXP(correctAnswers * 10);
         }
@@ -76,7 +73,6 @@ public class Student {
 
     // Calculate overall accuracy
     public double getOverallAccuracy() {
-
         int correct = 0;
         int total = 0;
 
@@ -92,9 +88,24 @@ public class Student {
         return (double) correct / total * 100;
     }
 
+    // Sort topic performance by accuracy
+    public void sortPerformanceByAccuracy(boolean ascending) {
+        BubbleSort.SortStats stats =
+                BubbleSort.sortByAccuracy(performanceRecords, ascending);
+
+        stats.displayStats();
+    }
+
+    // Sort topic performance by quiz score
+    public void sortPerformanceByQuizScore(boolean ascending) {
+        BubbleSort.SortStats stats =
+                BubbleSort.sortByQuizScore(performanceRecords, ascending);
+
+        stats.displayStats();
+    }
+
     // Display student progress
     public void displayProgress() {
-
         System.out.println("\n===== STUDENT PROGRESS =====");
         System.out.println("Name: " + name);
         System.out.println("Username: " + username);

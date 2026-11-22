@@ -8,15 +8,33 @@ public class TestStudent {
         Student student = new Student("Iyce", "iyce123");
 
         // Add quiz results
-        student.recordQuizResult("Java", 8, 10);
         student.recordQuizResult("HTML", 5, 10);
+        student.recordQuizResult("Java", 8, 10);
         student.recordQuizResult("Java", 9, 10);
 
         // Add completed challenges
         student.completeChallenge("Java Basics");
         student.completeChallenge("HTML Fundamentals");
 
-        // Display progress
+        // Sort by accuracy (highest first)
+        System.out.println("\nSORTING BY ACCURACY");
+
+        student.sortPerformanceByAccuracy(false);
+
+        System.out.println("Verified: "
+                + BubbleSort.verifyAccuracy(
+                        student.getPerformanceRecords(), false));
+
+        // (lowest first)
+        System.out.println("\nSORTING BY QUIZ SCORE");
+
+        student.sortPerformanceByQuizScore(true);
+
+        System.out.println("Verified: "
+                + BubbleSort.verifyQuizScore(
+                        student.getPerformanceRecords(), true));
+
+        
         student.displayProgress();
     }
 }

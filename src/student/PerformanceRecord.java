@@ -15,23 +15,22 @@ public class PerformanceRecord {
         this.totalQuestions = 0;
     }
 
-   // Add quiz result
-public boolean addResult(int correctAnswers, int questions) {
-    if (questions <= 0 || correctAnswers < 0
-            || correctAnswers > questions) {
-        return false;
+    // Add quiz result
+    public boolean addResult(int correctAnswers, int questions) {
+        if (questions <= 0 || correctAnswers < 0
+                || correctAnswers > questions) {
+            return false;
+        }
+
+        attempts++;
+        totalCorrect += correctAnswers;
+        totalQuestions += questions;
+
+        return true;
     }
-
-    attempts++;
-    totalCorrect += correctAnswers;
-    totalQuestions += questions;
-
-    return true;
-}
 
     // Calculate accuracy
     public double getAccuracy() {
-
         if (totalQuestions == 0) {
             return 0;
         }
@@ -41,7 +40,6 @@ public boolean addResult(int correctAnswers, int questions) {
 
     // Display performance
     public void displayRecord() {
-
         System.out.println("\nTopic: " + topic);
         System.out.println("Attempts: " + attempts);
         System.out.println("Correct Answers: " + totalCorrect);
