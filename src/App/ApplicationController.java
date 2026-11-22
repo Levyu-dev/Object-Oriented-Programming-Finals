@@ -22,9 +22,14 @@ public class ApplicationController extends JFrame {
     private ClassroomPanel teacherClass;
 
     public ApplicationController() {
-        setTitle("Learn to Code - Mobile App");
-        setSize(430, 780);
-        setResizable(false);
+        setTitle("Learn to Code");
+
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        int width = screen.width >= 1200 ? 900 : screen.width >= 800 ? 760 : Math.min(430, screen.width);
+        int height = screen.height >= 900 ? 780 : screen.height >= 700 ? 720 : Math.min(780, screen.height);
+        setSize(width, height);
+        setMinimumSize(new Dimension(360, 600));
+        setResizable(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -72,9 +77,23 @@ public class ApplicationController extends JFrame {
         topBar.add(toggleBtn, BorderLayout.WEST);
         topBar.add(appTitle, BorderLayout.EAST);
 
+        JScrollPane contentScroll = new JScrollPane(contentArea);
+        contentScroll.setBorder(null);
+        contentScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        contentScroll.getVerticalScrollBar().setUnitIncrement(16);
+
         shell.add(topBar, BorderLayout.NORTH);
         shell.add(sidebar, BorderLayout.WEST);
-        shell.add(contentArea, BorderLayout.CENTER);
+        shell.add(contentScroll, BorderLayout.CENTER);
+
+        shell.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent event) {
+                boolean desktopWide = shell.getWidth() >= 700;
+                sidebar.setVisible(desktopWide);
+                shell.revalidate();
+            }
+        });
         return shell;
     }
 

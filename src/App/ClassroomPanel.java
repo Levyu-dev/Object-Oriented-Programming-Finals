@@ -64,7 +64,7 @@ public class ClassroomPanel extends BaseScreen {
                     if (quiz != null) {
                         controller.launchTeacherQuiz(quiz);
                     } else {
-                        controller.launchQuizSession(extractQuestionCount(selected));
+                        controller.showError("This activity has no published quiz.");
                     }
                 }
             });
@@ -107,14 +107,11 @@ public class ClassroomPanel extends BaseScreen {
             addQuestionButton.addActionListener(e -> addDraftQuestion());
             JButton publishButton = Theme.createPrimaryButton("PUBLISH QUIZ");
             publishButton.addActionListener(e -> publishQuiz());
-            JButton randomActivityButton = Theme.createWhiteButton("RANDOM ACTIVITY");
-            randomActivityButton.addActionListener(e -> postPracticeActivity());
 
-            JPanel buttons = new JPanel(new GridLayout(1, 3, 6, 0));
+            JPanel buttons = new JPanel(new GridLayout(1, 2, 6, 0));
             buttons.setOpaque(false);
             buttons.add(addQuestionButton);
             buttons.add(publishButton);
-            buttons.add(randomActivityButton);
 
             builder.add(titlePanel, BorderLayout.NORTH);
             builder.add(draftScroll, BorderLayout.CENTER);
@@ -293,74 +290,6 @@ public class ClassroomPanel extends BaseScreen {
         quizTitleField.setText("");
         refresh();
         controller.showAlert("Quiz published to Section " + section + ".");
-    }
-
-    private void postPracticeActivity() {
-        JTextField titleField = new JTextField();
-        Theme.styleTextField(titleField);
-        JTextField countField = new JTextField("5");
-        Theme.styleTextField(countField);
-
-        JPanel form = new JPanel(new GridLayout(2, 2, 6, 6));
-        form.add(new JLabel("Activity title:"));
-        form.add(titleField);
-        form.add(new JLabel("Question count (1-19):"));
-        form.add(countField);
-
-        int result = JOptionPane.showConfirmDialog(this, form, "Post Random Activity",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (result != JOptionPane.OK_OPTION) {
-            return;
-        }
-
-        String title = titleField.getText().trim();
-        if (title.isEmpty()) {
-            controller.showError("Enter an activity title.");
-            return;
-        }
-
-        int count;
-        try {
-            count = Integer.parseInt(countField.getText().trim());
-        } catch (NumberFormatException ex) {
-            controller.showError("Enter a valid question count.");
-            return;
-        }
-        if (count < 1 || count > 19) {
-            controller.showError("Questions must be between 1 and 19.");
-            return;
-        }
-
-        DefaultListModel<String> assignments = controller.getSession()
-                .getAssignmentsForSection(controller.getSession().getCurrentSection());
-        String label = title + " (" + count + " Qs)";
-        for (int i = 0; i < assignments.size(); i++) {
-            if (assignments.get(i).equalsIgnoreCase(label)) {
-                controller.showError("An activity with that title and question count already exists.");
-                return;
-            }
-        }
-
-        assignments.addElement(label);
-        refresh();
-        controller.showAlert("Activity posted to Section " + controller.getSession().getCurrentSection() + ".");
-    }
-
-    private int extractQuestionCount(String activityText) {
-        try {
-            int open = activityText.lastIndexOf('(');
-            int close = activityText.lastIndexOf(')');
-            if (open != -1 && close > open) {
-                String inside = activityText.substring(open + 1, close).replaceAll("[^0-9]", "");
-                if (!inside.isEmpty()) {
-                    int parsed = Integer.parseInt(inside);
-                    return Math.max(1, Math.min(19, parsed));
-                }
-            }
-        } catch (Exception e) {
-            // Fallback to 5 questions
-        }
-        return 5;
     }
 
     @Override

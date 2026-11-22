@@ -103,9 +103,6 @@ public class UserSession {
         registeredTeachers.put("reyes", new TeacherRecord("Reyes", "2222"));
         registeredTeachers.put("cruz", new TeacherRecord("Cruz", "3333"));
 
-        getAssignmentsForSection("OOP101").addElement("Lab 1: Classes & Objects (10 Questions)");
-        getAssignmentsForSection("CS202").addElement("Lab 1: Inheritance Basics (10 Questions)");
-        getAssignmentsForSection("IT301").addElement("Lab 1: Polymorphism Quiz (10 Questions)");
     }
 
     public void loginStudent(String name, String section) {
