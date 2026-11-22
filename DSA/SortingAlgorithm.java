@@ -2,7 +2,6 @@ import java.util.List;
 
 public interface SortingAlgorithm {
 
-    // Sorting criteria (everyone uses these same constants)
     String CRITERIA_SCORE = "score";
     String CRITERIA_XP = "xp";
     String CRITERIA_ACCURACY = "accuracy";
@@ -15,19 +14,18 @@ public interface SortingAlgorithm {
     // Bubble/Quick = swaps, Merge = record movements
     long getSwaps();
 
-    // Execution time of the last sort, in nanoseconds
+    // Sort time in nanoseconds (taken from the algorithm's own System.nanoTime() measurement)
     long getExecutionTime();
 
     String getName();
 
-    // Shared helper: gets the value of a record based on the criteria.
-    // If your PerformanceRecord getters have different names, change them HERE only.
+    // Reads the value being sorted. Getter names match Angel's dataset fields.
     default double getValue(PerformanceRecord record, String criteria) {
         switch (criteria) {
             case CRITERIA_SCORE:
                 return record.getQuizScore();
             case CRITERIA_XP:
-                return record.getTotalXP();
+                return record.getTotalXp();
             case CRITERIA_ACCURACY:
                 return record.getAccuracy();
             default:

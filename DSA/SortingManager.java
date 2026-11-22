@@ -13,7 +13,6 @@ public class SortingManager {
         this.leaderboard = leaderboard;
     }
 
-    // Main menu loop
     public void run() {
         boolean running = true;
         while (running) {
@@ -37,12 +36,9 @@ public class SortingManager {
 
     private SortingAlgorithm createAlgorithm(int choice) {
         switch (choice) {
-            case 1:
-                return new BubbleSort();
-            case 2:
-                return new MergeSort();
-            default:
-                return new QuickSort();
+            case 1:  return new BubbleSortAdapter();
+            case 2:  return new MergeSortAdapter();
+            default: return new QuickSortAdapter();
         }
     }
 
@@ -68,16 +64,17 @@ public class SortingManager {
         String criteria = chooseCriteria();
         boolean ascending = chooseAscending();
 
-        // Sort a COPY so the original leaderboard stays untouched
-        List<PerformanceRecord> sorted = new ArrayList<>(leaderboard);
+        List<PerformanceRecord> sorted = new ArrayList<>(leaderboard); // keep original untouched
         algorithm.sort(sorted, criteria, ascending);
 
         System.out.println("\n--- Leaderboard sorted by " + criteria
                 + " (" + (ascending ? "ascending" : "descending") + ") using "
                 + algorithm.getName() + " ---");
         int rank = 1;
-        for (PerformanceRecord record : sorted) {
-            System.out.printf("%3d. %-10.2f %s%n", rank++, algorithm.getValue(record, criteria), record);
+        for (PerformanceRecord r : sorted) {
+            System.out.printf("%3d. %-10s %-15s score=%-4d xp=%-6d acc=%6.2f%%%n",
+                    rank++, r.getStudentId(), r.getUsername(),
+                    r.getQuizScore(), r.getTotalXp(), r.getAccuracy());
         }
 
         System.out.println("\nComparisons : " + algorithm.getComparisons());
@@ -89,15 +86,12 @@ public class SortingManager {
         String criteria = chooseCriteria();
         boolean ascending = chooseAscending();
 
-        // Uses the current leaderboard. For sizes 100/500/1000/5000,
-        // fill this map with Member 4's AlgorithmDataset datasets instead.
         Map<String, List<PerformanceRecord>> datasets = new LinkedHashMap<>();
         datasets.put("Leaderboard (" + leaderboard.size() + ")", leaderboard);
 
         new AlgorithmBenchmark().runAllSizes(datasets, criteria, ascending);
     }
 
-    // Reads an integer within [min, max] and keeps asking until valid
     private int readInt(String prompt, int min, int max) {
         while (true) {
             System.out.print(prompt);
@@ -108,7 +102,7 @@ public class SortingManager {
                     return value;
                 }
             } catch (NumberFormatException e) {
-                // fall through to the error message
+                // fall through
             }
             System.out.println("Invalid input. Enter a number from " + min + " to " + max + ".");
         }

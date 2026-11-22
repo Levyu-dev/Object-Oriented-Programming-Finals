@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -8,11 +9,10 @@ public class AlgorithmBenchmark {
 
     public AlgorithmBenchmark() {
         algorithms = new SortingAlgorithm[] {
-                new BubbleSort(), new MergeSort(), new QuickSort()
+                new BubbleSortAdapter(), new MergeSortAdapter(), new QuickSortAdapter()
         };
     }
 
-    // Runs the benchmark on every dataset (label -> records) and prints one table
     public void runAllSizes(Map<String, List<PerformanceRecord>> datasets,
                             String criteria, boolean ascending) {
         printHeader();
@@ -24,27 +24,23 @@ public class AlgorithmBenchmark {
     // Runs all three algorithms on separate copies of ONE dataset
     public void runBenchmark(String label, List<PerformanceRecord> original,
                              String criteria, boolean ascending) {
-        double[] reference = null; // sorted values from the first algorithm
+        double[] reference = null;
 
         for (SortingAlgorithm algo : algorithms) {
-            // Fresh copy so no algorithm receives already-sorted input
-            List<PerformanceRecord> copy = new ArrayList<>(original);
+            List<PerformanceRecord> copy = new ArrayList<>(original); // separate copy per algorithm
 
-            long start = System.nanoTime();
-            algo.sort(copy, criteria, ascending);
-            long elapsed = System.nanoTime() - start;
+            algo.sort(copy, criteria, ascending); // time is measured inside the algorithm with System.nanoTime()
 
             double[] values = extractValues(algo, copy, criteria);
             boolean correct = isSorted(values, ascending);
 
-            // All algorithms must produce the same ordering of values
             if (reference == null) {
                 reference = values;
-            } else if (!java.util.Arrays.equals(reference, values)) {
-                correct = false;
+            } else if (!Arrays.equals(reference, values)) {
+                correct = false; // all algorithms must give the same ordering
             }
 
-            printRow(label, algo, elapsed, correct);
+            printRow(label, algo, correct);
         }
     }
 
@@ -66,14 +62,14 @@ public class AlgorithmBenchmark {
 
     private void printHeader() {
         System.out.println();
-        System.out.printf("%-22s %-12s %12s %14s %12s %8s%n",
+        System.out.printf("%-26s %-12s %12s %14s %12s %8s%n",
                 "Dataset", "Algorithm", "Time (ms)", "Comparisons", "Swaps/Moves", "Correct");
-        System.out.println("-".repeat(86));
+        System.out.println("-".repeat(90));
     }
 
-    private void printRow(String label, SortingAlgorithm algo, long nanos, boolean correct) {
-        System.out.printf("%-22s %-12s %12.3f %14d %12d %8s%n",
-                label, algo.getName(), nanos / 1_000_000.0,
+    private void printRow(String label, SortingAlgorithm algo, boolean correct) {
+        System.out.printf("%-26s %-12s %12.3f %14d %12d %8s%n",
+                label, algo.getName(), algo.getExecutionTime() / 1_000_000.0,
                 algo.getComparisons(), algo.getSwaps(), correct ? "YES" : "NO");
     }
 }
