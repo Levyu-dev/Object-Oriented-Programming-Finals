@@ -1,66 +1,74 @@
 
 package quiz;
 
-import java.util.ArrayList;
+import java.util.*;
 
 public class TimedQuiz extends Quiz {
+    private final int timeLimitSeconds;
+    private boolean finishedInTime;
 
-    private int timeLimitSeconds;
-    private long questionStartTime;
-
-    public TimedQuiz(ArrayList<Questions> questions,
-            int timeLimitSeconds) {
-
-        super(questions);
-
+    public TimedQuiz(String title, int timeLimitSeconds) {
+        super(title);
         if (timeLimitSeconds <= 0) {
-            throw new IllegalArgumentException(
-                    "Time limit must be greater than zero.");
+            throw new IllegalArgumentException("Time limit must be greater than 0.");
         }
-
         this.timeLimitSeconds = timeLimitSeconds;
-        this.questionStartTime = System.currentTimeMillis();
-    }
-
-    public void startTimer() {
-        this.questionStartTime = System.currentTimeMillis();
     }
 
     @Override
-    public boolean submitAnswer(String userAnswer) {
+    public void play(Scanner input) {
+        if (!prepare()) return;
 
-        if (isFinished()) {
-            throw new InvalidQuizSubmissionException(
-                    "Quiz is already finished.");
-        }
+        finishedInTime = true;
+        long limitMs = timeLimitSeconds * 1000L;
+        long start = System.currentTimeMillis();
 
-        long currentTime = System.currentTimeMillis();
-        long elapsedMilliseconds = currentTime - questionStartTime;
-        long secondsElapsed = elapsedMilliseconds / 1000;
+        System.out.println("\n=== " + getModeName() + " (TIMED) ===");
+        System.out.println("You have " + timeLimitSeconds + " seconds. Go!");
 
-        if (elapsedMilliseconds >= timeLimitSeconds * 1000L) {
-
-            currentQuestionIndex++;
-
-            if (!isFinished()) {
-                startTimer();
+        for (Questions q : questions) {
+            long remaining = limitMs - (System.currentTimeMillis() - start);
+            if (remaining <= 0) {
+                System.out.println("\nTIME'S UP!");
+                finishedInTime = false;
+                break;
             }
 
-            throw new InvalidQuizSubmissionException(
-                    "Time expired. You took "
-                    + secondsElapsed + " seconds.");
+            System.out.println("\nTime left: " + (remaining / 1000) + "s");
+            boolean correct = q.askQuestions(input);
+
+            if (System.currentTimeMillis() - start > limitMs) {
+                System.out.println("(Too late! That answer doesn't count, even if it was correct.)");
+                recordResult(false);
+                finishedInTime = false;
+                break;
+            }
+            recordResult(correct);
         }
 
-        boolean isCorrect = super.submitAnswer(userAnswer);
+        showSummary();
+    }
 
-        if (!isFinished()) {
-            startTimer();
+    private boolean earnedBonus() {
+        return finishedInTime && getScore() > 0;
+    }
+
+    @Override
+    protected void showSummary() {
+        super.showSummary();
+        if (!finishedInTime) {
+            System.out.println("You ran out of time.");
+        } else if (earnedBonus()) {
+            System.out.println("You finished before the timer ran out! (+20 bonus XP included)");
+        } else {
+            System.out.println("You finished in time, but with no correct answers there is no bonus.");
         }
-
-        return isCorrect;
     }
 
-    public int getTimeLimitSeconds() {
-        return timeLimitSeconds;
+    @Override
+    public int getXpEarned() {
+        return super.getXpEarned() + (earnedBonus() ? 20 : 0);
     }
+
+    public int getTimeLimitSeconds() { return timeLimitSeconds; }
 }
