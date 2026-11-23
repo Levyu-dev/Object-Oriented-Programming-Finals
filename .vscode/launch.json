@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Learn to Code",
+            "request": "launch",
+            "mainClass": "App.Main",
+            "cwd": "${workspaceFolder}",
+            "classPaths": [
+                "${workspaceFolder}\\bin"
+            ],
+            "preLaunchTask": "Build Learn to Code",
+            "console": "integratedTerminal"
+        }
+    ]
+}

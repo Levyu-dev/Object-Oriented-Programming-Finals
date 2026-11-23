@@ -1,11 +1,19 @@
 package App;
 
 import javax.swing.DefaultListModel;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 public class UserSession {
     public enum QuestionType {
@@ -49,19 +57,6 @@ public class UserSession {
         public String getAssignmentLabel() { return title + " (" + questions.size() + " Questions)"; }
     }
 
-    public static class TeacherRecord {
-        private final String name;
-        private final String pin;
-
-        public TeacherRecord(String name, String pin) {
-            this.name = name;
-            this.pin = pin;
-        }
-
-        public String getName() { return name; }
-        public String getPin() { return pin; }
-    }
-
     public static class StudentRecord {
         private final String name;
         private final String section;
@@ -88,68 +83,172 @@ public class UserSession {
 
     private String currentUserName = "Student";
     private String currentSection = "OOP101";
+    private StudentRecord currentStudent;
+    private boolean demoTeacherSession;
 
     private final List<StudentRecord> allStudents = new ArrayList<>();
-    private final Map<String, TeacherRecord> registeredTeachers = new HashMap<>();
     private final Map<String, DefaultListModel<String>> sectionAssignments = new HashMap<>();
     private final Map<String, Map<String, TeacherQuiz>> teacherQuizzes = new HashMap<>();
+    private final Map<String, Integer> courseProgress = new HashMap<>();
+    private final Set<String> startedCourses = new HashSet<>();
+    private final CourseCatalog courseCatalog = new CourseCatalog();
+    private final File progressFile = new File("data/course-progress.properties");
 
     public UserSession() {
-        allStudents.add(new StudentRecord("Alex", "OOP101", 1450, 3));
-        allStudents.add(new StudentRecord("Jumana", "OOP101", 1120, 2));
-        allStudents.add(new StudentRecord("Iyce", "OOP101", 980, 1));
-
-        registeredTeachers.put("santos", new TeacherRecord("Santos", "1111"));
-        registeredTeachers.put("reyes", new TeacherRecord("Reyes", "2222"));
-        registeredTeachers.put("cruz", new TeacherRecord("Cruz", "3333"));
-
+        loadCourseProgress();
     }
 
     public void loginStudent(String name, String section) {
-        this.currentUserName = name;
-        this.currentSection = section.toUpperCase();
-
-        if (findStudent(name) == null) {
-            allStudents.add(new StudentRecord(name, this.currentSection, 500, 0));
-        }
-    }
-
-    public boolean isTeacherRegistered(String name) {
-        return registeredTeachers.containsKey(name.trim().toLowerCase());
-    }
-
-    public void registerNewTeacher(String name, String pin, String section) {
-        String key = name.trim().toLowerCase();
-        String cleanSec = section.trim().toUpperCase();
-        registeredTeachers.put(key, new TeacherRecord(name.trim(), pin.trim()));
         this.currentUserName = name.trim();
-        this.currentSection = cleanSec;
-    }
+        this.currentSection = section.trim().toUpperCase();
 
-    public boolean authenticateTeacher(String name, String inputPin, String section) {
-        TeacherRecord t = registeredTeachers.get(name.trim().toLowerCase());
-        if (t != null && t.getPin().equals(inputPin.trim())) {
-            this.currentUserName = t.getName();
-            this.currentSection = section.trim().toUpperCase();
-            return true;
+        StudentRecord existing = findStudent(this.currentUserName, this.currentSection);
+        if (existing == null) {
+            existing = new StudentRecord(this.currentUserName, this.currentSection, 0, 0);
+            allStudents.add(existing);
         }
-        return false;
+
+        this.currentStudent = existing;
+        this.demoTeacherSession = false;
     }
 
-    public StudentRecord getCurrentStudent() {
-        StudentRecord s = findStudent(currentUserName);
-        return (s != null) ? s : new StudentRecord(currentUserName, currentSection, 500, 0);
-    }
-
-    private StudentRecord findStudent(String name) {
-        for (StudentRecord s : allStudents) {
-            if (s.getName().equalsIgnoreCase(name)) return s;
+    private StudentRecord findStudent(String name, String section) {
+        for (StudentRecord student : allStudents) {
+            if (student.getName().equalsIgnoreCase(name)
+                    && student.getSection().equalsIgnoreCase(section)) {
+                return student;
+            }
         }
         return null;
     }
 
+    void loginDemoTeacher(String name, String section) {
+        this.currentUserName = name.trim();
+        this.currentSection = section.trim().toUpperCase();
+        this.currentStudent = null;
+        this.demoTeacherSession = true;
+    }
+
+    void logout() {
+        currentUserName = "";
+        currentSection = "";
+        currentStudent = null;
+        demoTeacherSession = false;
+    }
+
+    public StudentRecord getCurrentStudent() {
+        if (currentStudent == null) {
+            throw new IllegalStateException("No student is currently logged in.");
+        }
+        return currentStudent;
+    }
+
+    boolean isStudentSession() {
+        return currentStudent != null;
+    }
+
+    boolean isDemoTeacherSession() {
+        return demoTeacherSession;
+    }
+
     public void addXP(int points) {
         getCurrentStudent().addPoints(points);
+    }
+
+    public CourseCatalog getCourseCatalog() {
+        return courseCatalog;
+    }
+
+    public int getCompletedCourseLessons(String courseName) {
+        if (!isStudentSession()) return 0;
+        String key = progressKey(courseName);
+        return Math.min(courseProgress.getOrDefault(key, 0), courseCatalog.getLessonCount(courseName));
+    }
+
+    public boolean hasStartedCourse(String courseName) {
+        return isStudentSession() && startedCourses.contains(progressKey(courseName));
+    }
+
+    public void startCourse(String courseName) {
+        if (!isStudentSession() || !courseCatalog.getCourses().containsKey(courseName)) return;
+        startedCourses.add(progressKey(courseName));
+        courseProgress.putIfAbsent(progressKey(courseName), 0);
+        saveCourseProgress();
+    }
+
+    public void completeCourseLesson(String courseName, int lessonIndex) {
+        if (!isStudentSession()) return;
+        int total = courseCatalog.getLessonCount(courseName);
+        if (total == 0) {
+            throw new IllegalArgumentException("Unknown course: " + courseName);
+        }
+        String key = progressKey(courseName);
+        int completed = courseProgress.getOrDefault(key, 0);
+        if (lessonIndex != completed || completed >= total) return;
+        courseProgress.put(key, completed + 1);
+        startedCourses.add(key);
+        saveCourseProgress();
+    }
+
+    public String getDashboardCourse() {
+        if (!isStudentSession()) return null;
+        String firstStarted = null;
+        for (String courseName : courseCatalog.getCourses().keySet()) {
+            if (!hasStartedCourse(courseName)) continue;
+            if (firstStarted == null) firstStarted = courseName;
+            int completed = getCompletedCourseLessons(courseName);
+            int total = courseCatalog.getLessonCount(courseName);
+            if (completed < total) {
+                return courseName;
+            }
+        }
+        return firstStarted;
+    }
+
+    private String progressKey(String courseName) {
+        String safeName = courseName.trim().replace(".", "_").replace(" ", "_") + "_Roadmap";
+        return currentSection + "." + currentUserName.replace(" ", "_") + "." + safeName;
+    }
+
+    private void loadCourseProgress() {
+        if (!progressFile.isFile()) return;
+        Properties properties = new Properties();
+        try (FileInputStream input = new FileInputStream(progressFile)) {
+            properties.load(input);
+            for (String key : properties.stringPropertyNames()) {
+                if (key.endsWith(".started")) {
+                    if (Boolean.parseBoolean(properties.getProperty(key))) {
+                        startedCourses.add(key.substring(0, key.length() - ".started".length()));
+                    }
+                    continue;
+                }
+                try {
+                    int progress = Integer.parseInt(properties.getProperty(key));
+                    courseProgress.put(key, progress);
+                    if (progress > 0) startedCourses.add(key);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        } catch (IOException ignored) {
+        }
+    }
+
+    private void saveCourseProgress() {
+        File parent = progressFile.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            return;
+        }
+        Properties properties = new Properties();
+        for (Map.Entry<String, Integer> entry : courseProgress.entrySet()) {
+            properties.setProperty(entry.getKey(), Integer.toString(entry.getValue()));
+        }
+        for (String key : startedCourses) {
+            properties.setProperty(key + ".started", "true");
+        }
+        try (FileOutputStream output = new FileOutputStream(progressFile)) {
+            properties.store(output, "Learn to Code course progress");
+        } catch (IOException ignored) {
+        }
     }
 
     public DefaultListModel<String> getAssignmentsForSection(String section) {
@@ -159,6 +258,9 @@ public class UserSession {
     }
 
     public boolean addTeacherQuiz(String section, TeacherQuiz quiz) {
+        if (!demoTeacherSession) {
+            throw new IllegalStateException("Only a teacher demo session can publish quizzes.");
+        }
         String sectionKey = section.trim().toUpperCase();
         DefaultListModel<String> assignments = getAssignmentsForSection(sectionKey);
         String label = quiz.getAssignmentLabel();
@@ -172,6 +274,42 @@ public class UserSession {
         teacherQuizzes.putIfAbsent(sectionKey, new HashMap<>());
         teacherQuizzes.get(sectionKey).put(label, quiz);
         return true;
+    }
+
+    public boolean deleteTeacherQuiz(String section, String assignmentLabel) {
+        if (!demoTeacherSession) {
+            throw new IllegalStateException("Only a teacher demo session can delete activities.");
+        }
+        String sectionKey = section.trim().toUpperCase();
+        DefaultListModel<String> assignments = getAssignmentsForSection(sectionKey);
+        if (!assignments.removeElement(assignmentLabel)) {
+            return false;
+        }
+
+        Map<String, TeacherQuiz> quizzes = teacherQuizzes.get(sectionKey);
+        if (quizzes != null) {
+            quizzes.remove(assignmentLabel);
+            if (quizzes.isEmpty()) teacherQuizzes.remove(sectionKey);
+        }
+        if (assignments.isEmpty()) sectionAssignments.remove(sectionKey);
+        return true;
+    }
+
+    public void resetAllDemoData() {
+        if (currentStudent != null || demoTeacherSession) {
+            throw new IllegalStateException("Sign out before resetting demo data.");
+        }
+        try {
+            Files.deleteIfExists(progressFile.toPath());
+        } catch (IOException ex) {
+            throw new IllegalStateException("Unable to clear saved course progress.", ex);
+        }
+
+        allStudents.clear();
+        sectionAssignments.clear();
+        teacherQuizzes.clear();
+        courseProgress.clear();
+        startedCourses.clear();
     }
 
     public TeacherQuiz getTeacherQuiz(String section, String assignmentLabel) {

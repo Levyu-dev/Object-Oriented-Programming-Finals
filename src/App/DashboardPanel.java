@@ -8,6 +8,10 @@ public class DashboardPanel extends BaseScreen {
     private JLabel welcomeLabel;
     private JLabel xpLabel;
     private JProgressBar xpBar;
+    private JLabel contTitle;
+    private JProgressBar continueProgress;
+    private JButton resumeBtn;
+    private JPanel continuePanel;
 
     public DashboardPanel(ApplicationController controller) {
         super(controller);
@@ -28,31 +32,35 @@ public class DashboardPanel extends BaseScreen {
         xpPanel.setLayout(new BorderLayout(6, 6));
         xpPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        xpLabel = new JLabel("Level 1 — 500 XP");
+        xpLabel = new JLabel("Level 1 - 0 XP");
         xpLabel.setForeground(Theme.BRIGHT_LIME);
         xpLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 13));
-        xpBar = Theme.createProgressBar(500, 2000, Theme.BRIGHT_LIME, new Color(0, 50, 58));
+        xpBar = Theme.createProgressBar(0, 2000, Theme.BRIGHT_LIME, new Color(0, 50, 58));
         xpPanel.add(xpLabel, BorderLayout.NORTH);
         xpPanel.add(xpBar, BorderLayout.CENTER);
 
-        JPanel continuePanel = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
+        continuePanel = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
         continuePanel.setLayout(new BorderLayout(8, 8));
         continuePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        continuePanel.setVisible(false);
 
-        JLabel contTitle = new JLabel("Continue: OOP Basics (6/10)");
+        contTitle = new JLabel("Continue OOP Basics Roadmap");
         contTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 13));
         contTitle.setForeground(Theme.TEXT_DARK);
 
-        JButton resumeBtn = Theme.createPrimaryButton("Resume (+100 XP)");
+        continueProgress = Theme.createProgressBar(
+                0, 10, Theme.DEEP_TEAL, Theme.WHITE);
+
+        resumeBtn = Theme.createPrimaryButton("Continue Course");
         resumeBtn.setPreferredSize(new Dimension(0, 34));
         resumeBtn.addActionListener(e -> {
-            controller.getSession().addXP(100);
-            refresh();
-            controller.showAlert("Lesson completed! +100 XP added.");
+            UserSession session = controller.getSession();
+            String courseName = session.getDashboardCourse();
+            if (courseName != null) controller.showStudentScreen("COURSES");
         });
 
         continuePanel.add(contTitle, BorderLayout.NORTH);
-        continuePanel.add(Theme.createProgressBar(6, 10, Theme.DEEP_TEAL, Theme.WHITE), BorderLayout.CENTER);
+        continuePanel.add(continueProgress, BorderLayout.CENTER);
         continuePanel.add(resumeBtn, BorderLayout.SOUTH);
 
         topBox.add(welcomeLabel);
@@ -95,7 +103,33 @@ public class DashboardPanel extends BaseScreen {
         UserSession.StudentRecord s = controller.getSession().getCurrentStudent();
         int level = (s.getXp() / 250) + 1;
         welcomeLabel.setText("Hi, @" + s.getName() + " (" + s.getSection() + ")");
-        xpLabel.setText("Level " + level + " — " + s.getXp() + " XP");
+        xpLabel.setText("Level " + level + " - " + s.getXp() + " XP");
         xpBar.setValue(Math.min(2000, s.getXp()));
+
+        UserSession session = controller.getSession();
+        String courseName = session.getDashboardCourse();
+        if (courseName == null) {
+            continuePanel.setVisible(false);
+            revalidate();
+            repaint();
+            return;
+        }
+
+        int completed = session.getCompletedCourseLessons(courseName);
+        int total = session.getCourseCatalog().getLessonCount(courseName);
+
+        continuePanel.setVisible(true);
+
+        if (completed >= total) {
+            contTitle.setText("Roadmap Complete: " + courseName + " (" + completed + "/" + total + " lessons)");
+            resumeBtn.setText("VIEW ROADMAP");
+            resumeBtn.setEnabled(true);
+        } else {
+            contTitle.setText("Continue: " + courseName + " (" + completed + "/" + total + " lessons)");
+            resumeBtn.setText("CONTINUE ROADMAP");
+            resumeBtn.setEnabled(true);
+        }
+        continueProgress.setMaximum(total);
+        continueProgress.setValue(completed);
     }
 }

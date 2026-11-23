@@ -1,7 +1,10 @@
 package App;
 
-import DSA.MergeSort;
 import DSA.PerformanceRecord;
+import DSA.SortingAlgorithm;
+import DSA.BubbleSortAdapter;
+import DSA.MergeSortAdapter;
+import DSA.QuickSortAdapter;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -14,8 +17,12 @@ public class ClassroomPanel extends BaseScreen {
     private JList<String> assignmentList;
     private JTextArea leaderboardArea;
     private JComboBox<String> leaderboardSortBox;
+    private JComboBox<String> leaderboardAlgorithmBox;
+    private JButton leaderboardMetricsButton;
+    private boolean showLeaderboardMetrics;
     private JTextField quizTitleField;
     private DefaultListModel<String> draftQuestionModel;
+    private JList<String> draftQuestionList;
     private final List<UserSession.TeacherQuestion> draftQuestions = new ArrayList<>();
 
     public ClassroomPanel(ApplicationController controller, boolean isTeacher) {
@@ -54,7 +61,12 @@ public class ClassroomPanel extends BaseScreen {
         listScroll.setBorder(BorderFactory.createLineBorder(new Color(0, 84, 95, 60)));
         topCard.add(listScroll, BorderLayout.CENTER);
 
-        if (!isTeacher) {
+        if (isTeacher) {
+            JButton deleteActivityButton = Theme.createWhiteButton("DELETE SELECTED ACTIVITY");
+            deleteActivityButton.setPreferredSize(new Dimension(0, 34));
+            deleteActivityButton.addActionListener(e -> deleteSelectedActivity());
+            topCard.add(deleteActivityButton, BorderLayout.SOUTH);
+        } else {
             JButton startBtn = Theme.createPrimaryButton("Start Selected Activity");
             startBtn.setPreferredSize(new Dimension(0, 38));
             startBtn.addActionListener(e -> {
@@ -98,22 +110,25 @@ public class ClassroomPanel extends BaseScreen {
             titlePanel.add(quizTitleField, BorderLayout.CENTER);
 
             draftQuestionModel = new DefaultListModel<>();
-            JList<String> draftList = new JList<>(draftQuestionModel);
-            draftList.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 12));
-            draftList.setForeground(Theme.TEXT_DARK);
-            draftList.setBackground(Theme.INPUT_BACKGROUND);
-            draftList.setSelectionBackground(Theme.BRIGHT_LIME);
-            JScrollPane draftScroll = new JScrollPane(draftList);
+            draftQuestionList = new JList<>(draftQuestionModel);
+            draftQuestionList.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 12));
+            draftQuestionList.setForeground(Theme.TEXT_DARK);
+            draftQuestionList.setBackground(Theme.INPUT_BACKGROUND);
+            draftQuestionList.setSelectionBackground(Theme.BRIGHT_LIME);
+            JScrollPane draftScroll = new JScrollPane(draftQuestionList);
             draftScroll.setBorder(BorderFactory.createLineBorder(Theme.INPUT_BORDER));
 
             JButton addQuestionButton = Theme.createWhiteButton("ADD QUESTION");
             addQuestionButton.addActionListener(e -> addDraftQuestion());
+            JButton deleteQuestionButton = Theme.createWhiteButton("DELETE QUESTION");
+            deleteQuestionButton.addActionListener(e -> deleteDraftQuestion());
             JButton publishButton = Theme.createPrimaryButton("PUBLISH QUIZ");
             publishButton.addActionListener(e -> publishQuiz());
 
-            JPanel buttons = new JPanel(new GridLayout(1, 2, 6, 0));
+            JPanel buttons = new JPanel(new GridLayout(1, 3, 6, 0));
             buttons.setOpaque(false);
             buttons.add(addQuestionButton);
+            buttons.add(deleteQuestionButton);
             buttons.add(publishButton);
 
             builder.add(titlePanel, BorderLayout.NORTH);
@@ -132,9 +147,33 @@ public class ClassroomPanel extends BaseScreen {
             Theme.styleComboBox(leaderboardSortBox);
             leaderboardSortBox.addActionListener(e -> refreshLeaderboard());
 
+            leaderboardAlgorithmBox = new JComboBox<>(new String[]{
+                    "Merge Sort", "Bubble Sort", "Quick Sort"});
+            Theme.styleComboBox(leaderboardAlgorithmBox);
+            leaderboardAlgorithmBox.addActionListener(e -> refreshLeaderboard());
+
+            leaderboardMetricsButton = Theme.createWhiteButton("Show DSA Metrics");
+            leaderboardMetricsButton.setPreferredSize(new Dimension(150, 32));
+            leaderboardMetricsButton.addActionListener(e -> {
+                showLeaderboardMetrics = !showLeaderboardMetrics;
+                leaderboardMetricsButton.setText(showLeaderboardMetrics
+                        ? "Hide DSA Metrics" : "Show DSA Metrics");
+                refreshLeaderboard();
+            });
+
+            JPanel algorithmControls = new JPanel(new BorderLayout(6, 0));
+            algorithmControls.setOpaque(false);
+            JLabel algorithmLabel = new JLabel("Algorithm:");
+            algorithmLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
+            algorithmLabel.setForeground(Theme.TEXT_DARK);
+            algorithmControls.add(algorithmLabel, BorderLayout.WEST);
+            algorithmControls.add(leaderboardAlgorithmBox, BorderLayout.CENTER);
+            algorithmControls.add(leaderboardMetricsButton, BorderLayout.EAST);
+
             leaderboardHeader.add(boardTitle, BorderLayout.WEST);
             leaderboardHeader.add(leaderboardSortBox, BorderLayout.EAST);
             bottomCard.add(leaderboardHeader, BorderLayout.NORTH);
+            bottomCard.add(algorithmControls, BorderLayout.SOUTH);
 
             leaderboardArea = new JTextArea();
             leaderboardArea.setEditable(false);
@@ -162,14 +201,57 @@ public class ClassroomPanel extends BaseScreen {
         }
 
         draftQuestions.add(question);
+        draftQuestionModel.addElement(formatDraftQuestion(draftQuestions.size(), question));
+    }
+
+    private String formatDraftQuestion(int number, UserSession.TeacherQuestion question) {
         String type = question.getType() == UserSession.QuestionType.MULTIPLE_CHOICE
                 ? "Multiple choice" : "Short answer";
         String prompt = question.getPrompt();
-        if (prompt.length() > 32) {
-            prompt = prompt.substring(0, 29) + "...";
+        if (prompt.length() > 32) prompt = prompt.substring(0, 29) + "...";
+        return number + ". " + type + " - " + prompt + " (" + question.getPoints() + " pts)";
+    }
+
+    private void deleteDraftQuestion() {
+        int selectedIndex = draftQuestionList.getSelectedIndex();
+        if (selectedIndex < 0) {
+            controller.showError("Select a draft question to delete.");
+            return;
         }
-        draftQuestionModel.addElement(draftQuestions.size() + ". " + type + " - "
-                + prompt + " (" + question.getPoints() + " pts)");
+
+        int result = JOptionPane.showConfirmDialog(
+                this, "Delete the selected draft question?", "Delete Question",
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (result != JOptionPane.YES_OPTION) return;
+
+        draftQuestions.remove(selectedIndex);
+        draftQuestionModel.remove(selectedIndex);
+        for (int i = 0; i < draftQuestions.size(); i++) {
+            draftQuestionModel.set(i, formatDraftQuestion(i + 1, draftQuestions.get(i)));
+        }
+    }
+
+    private void deleteSelectedActivity() {
+        String selected = assignmentList.getSelectedValue();
+        if (selected == null) {
+            controller.showError("Select an activity to delete.");
+            return;
+        }
+
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                "Delete \"" + selected + "\" and all of its questions?",
+                "Delete Activity",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (result != JOptionPane.YES_OPTION) return;
+
+        UserSession session = controller.getSession();
+        if (!session.deleteTeacherQuiz(session.getCurrentSection(), selected)) {
+            controller.showError("The selected activity could not be found.");
+            return;
+        }
+        refresh();
     }
 
     private UserSession.TeacherQuestion showAddQuestionDialog() {
@@ -305,11 +387,18 @@ public class ClassroomPanel extends BaseScreen {
         controller.showAlert("Quiz published to Section " + section + ".");
     }
 
+    void clearDraftQuiz() {
+        if (!isTeacher) return;
+        draftQuestions.clear();
+        draftQuestionModel.clear();
+        quizTitleField.setText("");
+    }
+
     @Override
     public void refresh() {
         UserSession session = controller.getSession();
         String sec = session.getCurrentSection();
-        titleLabel.setText((isTeacher ? "Manage Class" : "Classroom") + " — " + sec);
+        titleLabel.setText((isTeacher ? "Manage Class" : "Classroom") + " - " + sec);
 
         DefaultListModel<String> model = session.getAssignmentsForSection(sec);
         assignmentList.setModel(model);
@@ -327,6 +416,7 @@ public class ClassroomPanel extends BaseScreen {
         String section = session.getCurrentSection();
         List<UserSession.StudentRecord> students = session.getStudentsInSection(section);
         ArrayList<PerformanceRecord> records = new ArrayList<>();
+        StringBuilder output = new StringBuilder();
 
         for (UserSession.StudentRecord student : students) {
             records.add(new PerformanceRecord(
@@ -337,21 +427,63 @@ public class ClassroomPanel extends BaseScreen {
                     0));
         }
 
+        if (records.isEmpty()) {
+            output.append("No students in this section yet.");
+            leaderboardArea.setText(output.toString());
+            leaderboardArea.setCaretPosition(0);
+            return;
+        }
+
         if (leaderboardSortBox != null) {
             String criterion = (String) leaderboardSortBox.getSelectedItem();
-            if ("Completed Quizzes".equals(criterion)) {
-                MergeSort.sortByQuizScore(records, false);
+            String criterionName = "Completed Quizzes".equals(criterion)
+                    ? SortingAlgorithm.CRITERIA_SCORE
+                    : SortingAlgorithm.CRITERIA_XP;
+
+            String algorithmName = (String) leaderboardAlgorithmBox.getSelectedItem();
+            SortingAlgorithm algorithm;
+            if ("Bubble Sort".equals(algorithmName)) {
+                algorithm = new BubbleSortAdapter();
+            } else if ("Quick Sort".equals(algorithmName)) {
+                algorithm = new QuickSortAdapter();
             } else {
-                MergeSort.sortByTotalXP(records, false);
+                algorithm = new MergeSortAdapter();
+            }
+            algorithm.sort(records, criterionName, false);
+
+            if (showLeaderboardMetrics) {
+                output.append("\n");
+                output.append("Algorithm: ").append(algorithm.getName()).append("\n");
+                output.append("Comparisons: ").append(algorithm.getComparisons()).append("\n");
+                output.append("Swaps/Moves: ").append(algorithm.getSwaps()).append("\n");
+                output.append(String.format("Time: %.3f ms",
+                        algorithm.getExecutionTime() / 1_000_000.0));
+
+                output.append("\n\nAlgorithm Comparison:\n");
+                output.append(String.format("%-12s %12s %12s %10s%n",
+                        "Algorithm", "Comparisons", "Swaps/Moves", "Time(ms)"));
+                SortingAlgorithm[] algorithms = {
+                        new BubbleSortAdapter(),
+                        new MergeSortAdapter(),
+                        new QuickSortAdapter()
+                };
+                for (SortingAlgorithm benchmarkAlgorithm : algorithms) {
+                    ArrayList<PerformanceRecord> copy = new ArrayList<>(records);
+                    benchmarkAlgorithm.sort(copy, criterionName, false);
+                    output.append(String.format("%-12s %12d %12d %10.3f%n",
+                            benchmarkAlgorithm.getName(),
+                            benchmarkAlgorithm.getComparisons(),
+                            benchmarkAlgorithm.getSwaps(),
+                            benchmarkAlgorithm.getExecutionTime() / 1_000_000.0));
+                }
             }
         }
 
-        StringBuilder output = new StringBuilder();
         int rank = 1;
         for (PerformanceRecord record : records) {
             output.append(rank++)
                     .append(". @").append(record.getUsername())
-                    .append(" — ").append(record.getTotalXp()).append(" XP")
+                    .append(" - ").append(record.getTotalXp()).append(" XP")
                     .append(" | Quizzes: ").append(record.getQuizScore())
                     .append("\n");
         }

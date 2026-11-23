@@ -16,6 +16,7 @@ public class ApplicationController extends JFrame {
 
     private UserSession session = new UserSession();
     private DashboardPanel studentDash;
+    private CoursePanel studentCourses;
     private ClassroomPanel studentClass;
     private QuizPlayPanel quizPlayPanel;
     private TeacherDashboardPanel teacherDash;
@@ -36,11 +37,13 @@ public class ApplicationController extends JFrame {
         rootContainer.add(createWelcomeScreen(), "WELCOME");
 
         studentDash = new DashboardPanel(this);
+        studentCourses = new CoursePanel(this);
         studentClass = new ClassroomPanel(this, false);
         quizPlayPanel = new QuizPlayPanel(this);
 
         studentContent.add(studentDash, "STUDENT_DASH");
         studentContent.add(new PracticePanel(this), "PRACTICE");
+        studentContent.add(studentCourses, "COURSES");
         studentContent.add(studentClass, "STUDENT_CLASS");
         studentContent.add(quizPlayPanel, "QUIZ_PLAY");
         rootContainer.add(buildMobileShell(new SidebarNav(this, false), studentContent), "STUDENT_APP");
@@ -99,10 +102,21 @@ public class ApplicationController extends JFrame {
 
     public void start() {
         setVisible(true);
-        logout();
+        session.logout();
+        rootLayout.show(rootContainer, "WELCOME");
     }
 
     public void logout() {
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                "Sign out of the current session?",
+                "Sign Out",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+        if (result != JOptionPane.YES_OPTION) {
+            return;
+        }
+        session.logout();
         rootLayout.show(rootContainer, "WELCOME");
     }
 
@@ -110,33 +124,56 @@ public class ApplicationController extends JFrame {
         return session;
     }
 
+    public void resetAllDemoData() {
+        session.resetAllDemoData();
+        teacherClass.clearDraftQuiz();
+    }
+
     public void launchQuizSession(int questionCount) {
+        if (!requireStudentSession()) return;
         quizPlayPanel.startQuiz(questionCount);
         showStudentScreen("QUIZ_PLAY");
     }
 
+    public void launchQuickPractice(String topic, int questionCount) {
+        if (!requireStudentSession()) return;
+        int availableQuestions = QuizQuestionBank.getQuickPracticeQuestionCount(topic);
+        if (questionCount < 1 || questionCount > availableQuestions) {
+            showError("Choose between 1 and " + availableQuestions + " questions.");
+            return;
+        }
+        quizPlayPanel.startQuickPractice(topic, questionCount);
+        showStudentScreen("QUIZ_PLAY");
+    }
+
     public void launchTimedQuiz(int questionCount) {
+        if (!requireStudentSession()) return;
         quizPlayPanel.startTimedQuiz(questionCount);
         showStudentScreen("QUIZ_PLAY");
     }
 
     public void launchFinalBossQuiz(int questionCount) {
+        if (!requireStudentSession()) return;
         quizPlayPanel.startFinalBossQuiz(questionCount);
         showStudentScreen("QUIZ_PLAY");
     }
 
     public void launchPartyQuiz(int questionCount) {
+        if (!requireStudentSession()) return;
         quizPlayPanel.startPartyQuiz(questionCount);
         showStudentScreen("QUIZ_PLAY");
     }
 
     public void launchTeacherQuiz(UserSession.TeacherQuiz quiz) {
+        if (!requireStudentSession()) return;
         quizPlayPanel.startTeacherQuiz(quiz);
         showStudentScreen("QUIZ_PLAY");
     }
 
     public void showStudentScreen(String name) {
+        if (!requireStudentSession()) return;
         studentDash.refresh();
+        studentCourses.refresh();
         studentClass.refresh();
         rootLayout.show(rootContainer, "STUDENT_APP");
         studentLayout.show(studentContent, name);
@@ -174,7 +211,7 @@ public class ApplicationController extends JFrame {
         form.setBackground(Theme.PALE_LIME);
         form.setMaximumSize(new Dimension(280, 130));
 
-        JLabel nameLbl = new JLabel("Your Name / Username:");
+        JLabel nameLbl = new JLabel("Display Name (Guest):");
         nameLbl.setForeground(Theme.TEXT_DARK);
         nameLbl.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
 
@@ -186,6 +223,7 @@ public class ApplicationController extends JFrame {
         JTextField sectionField = new JTextField("OOP101");
         Theme.styleTextField(nameField);
         Theme.styleTextField(sectionField);
+        nameField.setToolTipText("Guest names are not verified accounts in this local prototype.");
 
         form.add(nameLbl);
         form.add(nameField);
@@ -196,11 +234,20 @@ public class ApplicationController extends JFrame {
         btnRow.setBackground(Theme.PALE_LIME);
         btnRow.setMaximumSize(new Dimension(280, 105));
 
-        JButton studentBtn = Theme.createPrimaryButton("ENTER AS STUDENT");
+        JButton studentBtn = Theme.createPrimaryButton("SIGN IN AS STUDENT");
         studentBtn.addActionListener(e -> handleLogin(nameField.getText(), sectionField.getText(), false));
 
-        JButton teacherBtn = Theme.createWhiteButton("ENTER AS TEACHER");
+        JButton teacherBtn = Theme.createWhiteButton("SIGN IN AS TEACHER");
+        teacherBtn.setEnabled(true);
+        teacherBtn.setToolTipText("Presentation teacher access.");
         teacherBtn.addActionListener(e -> handleLogin(nameField.getText(), sectionField.getText(), true));
+
+        JButton resetDemoButton = Theme.createWhiteButton("Reset Demo Data");
+        resetDemoButton.setFont(new Font(Theme.UI_FONT, Font.BOLD, 10));
+        resetDemoButton.setPreferredSize(new Dimension(120, 28));
+        resetDemoButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        resetDemoButton.setToolTipText("Clear all students, activities, questions, and course progress");
+        resetDemoButton.addActionListener(e -> confirmResetDemoData());
 
         btnRow.add(studentBtn);
         btnRow.add(teacherBtn);
@@ -214,44 +261,56 @@ public class ApplicationController extends JFrame {
         panel.add(form);
         panel.add(Box.createVerticalStrut(22));
         panel.add(btnRow);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(resetDemoButton);
         return panel;
+    }
+
+    private void confirmResetDemoData() {
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                "Clear all students, activities and questions, and saved course progress?\nThis cannot be undone.",
+                "Reset All Demo Data",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (result != JOptionPane.YES_OPTION) return;
+
+        try {
+            resetAllDemoData();
+            showAlert("All demo data has been cleared.");
+        } catch (IllegalStateException ex) {
+            showError(ex.getMessage());
+        }
     }
 
     private void handleLogin(String rawName, String rawSection, boolean asTeacher) {
         try {
             String name = rawName.trim();
             String section = rawSection.trim().toUpperCase();
+            if (asTeacher) {
+                if (name.isEmpty() || section.isEmpty()) {
+                    throw new InvalidMenuChoiceException("Please enter both your Name and Class Section Code.");
+                }
+                session.loginDemoTeacher(name, section);
+                showTeacherScreen("TEACHER_DASH");
+                return;
+            }
             if (name.isEmpty() || section.isEmpty()) {
                 throw new InvalidMenuChoiceException("Please enter both your Name and Class Section Code.");
             }
-            if (asTeacher) {
-                if (session.isTeacherRegistered(name)) {
-                    String pin = JOptionPane.showInputDialog(this, "Welcome back Prof. " + name + "!\nEnter your PIN:", "Teacher Login", JOptionPane.QUESTION_MESSAGE);
-                    if (pin == null) return;
-                    if (!session.authenticateTeacher(name, pin, section)) {
-                        throw new InvalidMenuChoiceException("Access Denied: Incorrect PIN.");
-                    }
-                } else {
-                    String schoolCode = JOptionPane.showInputDialog(this, "New Instructor Setup!\nEnter School Faculty Code (Hint: 1234):", "Faculty Verification", JOptionPane.QUESTION_MESSAGE);
-                    if (schoolCode == null) return;
-                    if (!schoolCode.trim().equals("1234")) {
-                        throw new InvalidMenuChoiceException("Access Denied: Invalid Faculty Code.");
-                    }
-                    String newPin = JOptionPane.showInputDialog(this, "Create your personal 4-digit PIN:", "Set Instructor PIN", JOptionPane.QUESTION_MESSAGE);
-                    if (newPin == null || newPin.trim().length() < 4) {
-                        throw new InvalidMenuChoiceException("PIN must be at least 4 characters.");
-                    }
-                    session.registerNewTeacher(name, newPin, section);
-                    showAlert("Account created for Prof. " + name + " (Section " + section + ")!");
-                }
-                showTeacherScreen("TEACHER_DASH");
-            } else {
-                session.loginStudent(name, section);
-                showStudentScreen("STUDENT_DASH");
-            }
+            session.loginStudent(name, section);
+            showStudentScreen("STUDENT_DASH");
         } catch (InvalidMenuChoiceException ex) {
             showError(ex.getMessage());
         }
+    }
+
+    private boolean requireStudentSession() {
+        if (!session.isStudentSession()) {
+            showError("Log in as a student before opening student features.");
+            return false;
+        }
+        return true;
     }
 
     public void showAlert(String msg) {

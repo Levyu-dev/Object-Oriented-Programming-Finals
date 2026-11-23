@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class PracticePanel extends BaseScreen {
@@ -14,7 +13,7 @@ public class PracticePanel extends BaseScreen {
         setBackground(Theme.PALE_LIME);
         setBorder(new EmptyBorder(14, 16, 14, 16));
 
-        JLabel header = new JLabel("Practice Setup");
+        JLabel header = new JLabel("Quick Practice");
         header.setFont(new Font(Theme.UI_FONT, Font.BOLD, 20));
         header.setForeground(Theme.TEXT_DARK);
 
@@ -22,54 +21,55 @@ public class PracticePanel extends BaseScreen {
         center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
         center.setBackground(Theme.PALE_LIME);
 
+        JLabel topicLabel = new JLabel("Choose a topic:");
+        topicLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 13));
+        topicLabel.setForeground(Theme.TEXT_DARK);
+        topicLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         JPanel topicGrid = new JPanel(new GridLayout(3, 2, 8, 8));
         topicGrid.setBackground(Theme.PALE_LIME);
-        List<String> topics = Arrays.asList("Java Basics", "Conditionals", "Loops", "Methods", "Arrays", "OOP");
-        List<JButton> buttons = new ArrayList<>();
+        topicGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        for (int i = 0; i < topics.size(); i++) {
-            String topic = topics.get(i);
-            JButton btn = Theme.createPrimaryButton(topic);
-            buttons.add(btn);
-            if (i == 0) {
-                btn.setBackground(Theme.BRIGHT_LIME);
-                btn.setForeground(Theme.TEXT_DARK);
-            }
-            btn.addActionListener(e -> {
-                for (JButton b : buttons) {
-                    b.setBackground(Theme.DEEP_TEAL);
-                    b.setForeground(Theme.WHITE);
-                }
-                btn.setBackground(Theme.BRIGHT_LIME);
-                btn.setForeground(Theme.TEXT_DARK);
-            });
-            topicGrid.add(btn);
-        }
+        List<String> topics = QuizQuestionBank.getQuickPracticeTopics();
+        List<JButton> topicButtons = new ArrayList<>();
+        String[] selectedTopic = {topics.get(0)};
 
-        JPanel optionsCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
-        optionsCard.setLayout(new GridLayout(2, 2, 8, 8));
-
-        JComboBox<String> diffBox = new JComboBox<>();
-        diffBox.addItem("Easy");
-        diffBox.addItem("Medium");
-        diffBox.addItem("Hard");
-        Theme.styleComboBox(diffBox);
+        JLabel questionCountLabel = new JLabel();
+        questionCountLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
+        questionCountLabel.setForeground(Theme.TEXT_DARK);
 
         JTextField countField = new JTextField("5");
         Theme.styleTextField(countField);
 
-        JLabel dLabel = new JLabel("Difficulty:");
-        dLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
-        dLabel.setForeground(Theme.TEXT_DARK);
-        JLabel qLabel = new JLabel("Questions (1-19):");
-        qLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
-        qLabel.setForeground(Theme.TEXT_DARK);
+        for (String topic : topics) {
+            JButton topicButton = Theme.createPrimaryButton(topic);
+            topicButtons.add(topicButton);
+            if (topic.equals(selectedTopic[0])) {
+                topicButton.setBackground(Theme.BRIGHT_LIME);
+                topicButton.setForeground(Theme.TEXT_DARK);
+            }
+            topicButton.addActionListener(e -> {
+                selectedTopic[0] = topic;
+                for (JButton button : topicButtons) {
+                    button.setBackground(Theme.DEEP_TEAL);
+                    button.setForeground(Theme.WHITE);
+                }
+                topicButton.setBackground(Theme.BRIGHT_LIME);
+                topicButton.setForeground(Theme.TEXT_DARK);
+                questionCountLabel.setText(questionCountText(topic));
+            });
+            topicGrid.add(topicButton);
+        }
 
-        optionsCard.add(dLabel);
-        optionsCard.add(diffBox);
-        optionsCard.add(qLabel);
+        questionCountLabel.setText(questionCountText(selectedTopic[0]));
+        JPanel optionsCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
+        optionsCard.setLayout(new GridLayout(2, 1, 8, 8));
+        optionsCard.add(questionCountLabel);
         optionsCard.add(countField);
+        optionsCard.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        center.add(topicLabel);
+        center.add(Box.createVerticalStrut(8));
         center.add(topicGrid);
         center.add(Box.createVerticalStrut(12));
         center.add(optionsCard);
@@ -79,10 +79,12 @@ public class PracticePanel extends BaseScreen {
         startBtn.addActionListener(e -> {
             try {
                 int count = Integer.parseInt(countField.getText().trim());
-                if (count < 1 || count > 19) {
-                    throw new InvalidMenuChoiceException("Enter 1 to 19 questions.");
+                int maxQuestions = QuizQuestionBank.getQuickPracticeQuestionCount(selectedTopic[0]);
+                if (count < 1 || count > maxQuestions) {
+                    throw new InvalidMenuChoiceException(
+                            "Enter a number from 1 to " + maxQuestions + ".");
                 }
-                controller.launchQuizSession(count);
+                controller.launchQuickPractice(selectedTopic[0], count);
             } catch (NumberFormatException ex) {
                 controller.showError("Please type a valid number!");
             } catch (InvalidMenuChoiceException ex) {
@@ -93,6 +95,10 @@ public class PracticePanel extends BaseScreen {
         add(header, BorderLayout.NORTH);
         add(center, BorderLayout.CENTER);
         add(startBtn, BorderLayout.SOUTH);
+    }
+
+    private String questionCountText(String topic) {
+        return "Questions (1-" + QuizQuestionBank.getQuickPracticeQuestionCount(topic) + "):";
     }
 
     @Override

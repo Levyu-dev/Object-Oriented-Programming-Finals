@@ -64,7 +64,7 @@ public class TeacherDashboardPanel extends BaseScreen {
         gradebookPanel.add(tableTitle, BorderLayout.NORTH);
         gradebookPanel.add(new JScrollPane(studentTable), BorderLayout.CENTER);
 
-        JButton manageBtn = Theme.createPrimaryButton("Create Quiz for Students →");
+        JButton manageBtn = Theme.createPrimaryButton("Create Quiz for Students ->");
         manageBtn.setPreferredSize(new Dimension(0, 42));
         manageBtn.addActionListener(e -> controller.showTeacherScreen("TEACHER_CLASS"));
 

@@ -10,6 +10,7 @@ import java.util.List;
 public class QuizPlayPanel extends BaseScreen {
     public enum QuizMode {
         STANDARD,
+        QUICK_PRACTICE,
         TIMED,
         FINAL_BOSS,
         PARTY
@@ -31,6 +32,7 @@ public class QuizPlayPanel extends BaseScreen {
     private int playerHp = 100;
     private final String[] partyPlayers = {"You", "Jumana", "Iyce"};
     private int partyPlayerIndex;
+    private String activeQuickPracticeTopic = "";
 
     public QuizPlayPanel(ApplicationController controller) {
         super(controller);
@@ -83,7 +85,20 @@ public class QuizPlayPanel extends BaseScreen {
 
     public void startQuiz(int count) {
         mode = QuizMode.STANDARD;
+        activeQuickPracticeTopic = "";
         startShuffledQuestions(count);
+    }
+
+    public void startQuickPractice(String topic, int count) {
+        List<Questions> questions = QuizQuestionBank.createQuestions(topic);
+        if (questions.isEmpty()) {
+            throw new IllegalArgumentException("Unknown quick-practice topic: " + topic);
+        }
+        mode = QuizMode.QUICK_PRACTICE;
+        activeQuickPracticeTopic = topic;
+        Collections.shuffle(questions);
+        int limit = Math.min(count, questions.size());
+        startQuestions(new ArrayList<>(questions.subList(0, limit)));
     }
 
     private void startShuffledQuestions(int count) {
@@ -95,6 +110,7 @@ public class QuizPlayPanel extends BaseScreen {
 
     public void startTimedQuiz(int count) {
         mode = QuizMode.TIMED;
+        activeQuickPracticeTopic = "";
         secondsRemaining = 60;
         startShuffledQuestions(count);
         badgeLabel.setText("TIMED QUIZ - 60 seconds");
@@ -115,6 +131,7 @@ public class QuizPlayPanel extends BaseScreen {
 
     public void startFinalBossQuiz(int count) {
         mode = QuizMode.FINAL_BOSS;
+        activeQuickPracticeTopic = "";
         bossHp = 100;
         playerHp = 100;
         startShuffledQuestions(count);
@@ -122,12 +139,14 @@ public class QuizPlayPanel extends BaseScreen {
 
     public void startPartyQuiz(int count) {
         mode = QuizMode.PARTY;
+        activeQuickPracticeTopic = "";
         partyPlayerIndex = 0;
         startShuffledQuestions(count);
     }
 
     public void startTeacherQuiz(UserSession.TeacherQuiz quiz) {
         mode = QuizMode.STANDARD;
+        activeQuickPracticeTopic = "";
         List<Questions> questions = new ArrayList<>();
         for (UserSession.TeacherQuestion question : quiz.getQuestions()) {
             if (question.getType() == UserSession.QuestionType.MULTIPLE_CHOICE) {
@@ -171,6 +190,7 @@ public class QuizPlayPanel extends BaseScreen {
         String modeLabel = mode == QuizMode.TIMED ? "TIMED"
                 : mode == QuizMode.FINAL_BOSS ? "FINAL BOSS"
                 : mode == QuizMode.PARTY ? "PARTY - " + partyPlayers[partyPlayerIndex]
+                : mode == QuizMode.QUICK_PRACTICE ? "QUICK PRACTICE - " + activeQuickPracticeTopic
                 : "OOP QUIZ";
         if (mode == QuizMode.TIMED) {
             badgeLabel.setText(modeLabel + " - " + secondsRemaining + " seconds");

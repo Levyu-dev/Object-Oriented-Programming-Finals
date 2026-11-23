@@ -29,6 +29,9 @@ public class SidebarNav extends JPanel {
             JButton practiceBtn = Theme.createCircleButton("Prac", "Practice");
             practiceBtn.addActionListener(e -> controller.showStudentScreen("PRACTICE"));
 
+            JButton coursesBtn = Theme.createCircleButton("Course", "Browse courses");
+            coursesBtn.addActionListener(e -> controller.showStudentScreen("COURSES"));
+
             JButton classBtn = Theme.createCircleButton("Class", "My Classroom");
             classBtn.addActionListener(e -> controller.showStudentScreen("STUDENT_CLASS"));
 
@@ -36,10 +39,12 @@ public class SidebarNav extends JPanel {
             add(Box.createVerticalStrut(16));
             add(practiceBtn);
             add(Box.createVerticalStrut(16));
+            add(coursesBtn);
+            add(Box.createVerticalStrut(16));
             add(classBtn);
         }
 
-        JButton logoutBtn = Theme.createCircleButton("Exit", "Logout");
+        JButton logoutBtn = Theme.createCircleButton("Sign Out", "Sign out of the current session");
         logoutBtn.addActionListener(e -> controller.logout());
 
         add(Box.createVerticalGlue());
