@@ -1,5 +1,7 @@
 package App;
 
+import DSA.MergeSort;
+import DSA.PerformanceRecord;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -11,6 +13,7 @@ public class ClassroomPanel extends BaseScreen {
     private JLabel titleLabel;
     private JList<String> assignmentList;
     private JTextArea leaderboardArea;
+    private JComboBox<String> leaderboardSortBox;
     private JTextField quizTitleField;
     private DefaultListModel<String> draftQuestionModel;
     private final List<UserSession.TeacherQuestion> draftQuestions = new ArrayList<>();
@@ -118,10 +121,20 @@ public class ClassroomPanel extends BaseScreen {
             builder.add(buttons, BorderLayout.SOUTH);
             bottomCard.add(builder, BorderLayout.CENTER);
         } else {
+            JPanel leaderboardHeader = new JPanel(new BorderLayout(8, 4));
+            leaderboardHeader.setOpaque(false);
+
             JLabel boardTitle = new JLabel("Section Leaderboard");
             boardTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
             boardTitle.setForeground(Theme.TEXT_DARK);
-            bottomCard.add(boardTitle, BorderLayout.NORTH);
+
+            leaderboardSortBox = new JComboBox<>(new String[]{"XP", "Completed Quizzes"});
+            Theme.styleComboBox(leaderboardSortBox);
+            leaderboardSortBox.addActionListener(e -> refreshLeaderboard());
+
+            leaderboardHeader.add(boardTitle, BorderLayout.WEST);
+            leaderboardHeader.add(leaderboardSortBox, BorderLayout.EAST);
+            bottomCard.add(leaderboardHeader, BorderLayout.NORTH);
 
             leaderboardArea = new JTextArea();
             leaderboardArea.setEditable(false);
@@ -305,16 +318,47 @@ public class ClassroomPanel extends BaseScreen {
         }
 
         if (!isTeacher && leaderboardArea != null) {
-            StringBuilder sb = new StringBuilder();
-            int rank = 1;
-            for (UserSession.StudentRecord s : session.getStudentsInSection(sec)) {
-                sb.append(rank++).append(". @").append(s.getName()).append(" — ").append(s.getXp()).append(" XP\n");
-            }
-            if (sb.length() == 0) {
-                sb.append("No students in this section yet.");
-            }
-            leaderboardArea.setText(sb.toString());
-            leaderboardArea.setCaretPosition(0);
+            refreshLeaderboard();
         }
+    }
+
+    private void refreshLeaderboard() {
+        UserSession session = controller.getSession();
+        String section = session.getCurrentSection();
+        List<UserSession.StudentRecord> students = session.getStudentsInSection(section);
+        ArrayList<PerformanceRecord> records = new ArrayList<>();
+
+        for (UserSession.StudentRecord student : students) {
+            records.add(new PerformanceRecord(
+                    student.getName(),
+                    student.getName(),
+                    student.getCompletedQuizzes(),
+                    student.getXp(),
+                    0));
+        }
+
+        if (leaderboardSortBox != null) {
+            String criterion = (String) leaderboardSortBox.getSelectedItem();
+            if ("Completed Quizzes".equals(criterion)) {
+                MergeSort.sortByQuizScore(records, false);
+            } else {
+                MergeSort.sortByTotalXP(records, false);
+            }
+        }
+
+        StringBuilder output = new StringBuilder();
+        int rank = 1;
+        for (PerformanceRecord record : records) {
+            output.append(rank++)
+                    .append(". @").append(record.getUsername())
+                    .append(" — ").append(record.getTotalXp()).append(" XP")
+                    .append(" | Quizzes: ").append(record.getQuizScore())
+                    .append("\n");
+        }
+        if (output.length() == 0) {
+            output.append("No students in this section yet.");
+        }
+        leaderboardArea.setText(output.toString());
+        leaderboardArea.setCaretPosition(0);
     }
 }
