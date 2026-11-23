@@ -36,9 +36,9 @@ public class SortingManager {
 
     private SortingAlgorithm createAlgorithm(int choice) {
         switch (choice) {
-            case 1:  return new BubbleSortAdapter();
-            case 2:  return new MergeSortAdapter();
-            default: return new QuickSortAdapter();
+            case 1:  return new SortingAdapters.BubbleSortAdapter();
+            case 2:  return new SortingAdapters.MergeSortAdapter();
+            default: return new SortingAdapters.QuickSortAdapter();
         }
     }
 

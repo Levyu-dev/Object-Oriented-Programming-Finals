@@ -9,7 +9,9 @@ public class AlgorithmBenchmark {
 
     public AlgorithmBenchmark() {
         algorithms = new SortingAlgorithm[] {
-                new BubbleSortAdapter(), new MergeSortAdapter(), new QuickSortAdapter()
+                new SortingAdapters.BubbleSortAdapter(),
+                new SortingAdapters.MergeSortAdapter(),
+                new SortingAdapters.QuickSortAdapter()
         };
     }
 
@@ -29,7 +31,9 @@ public class AlgorithmBenchmark {
         for (SortingAlgorithm algo : algorithms) {
             List<PerformanceRecord> copy = new ArrayList<>(original); // separate copy per algorithm
 
-            algo.sort(copy, criteria, ascending); // time is measured inside the algorithm with System.nanoTime()
+            long start = System.nanoTime();                 // benchmark's own timer
+            algo.sort(copy, criteria, ascending);
+            long totalNanos = System.nanoTime() - start;
 
             double[] values = extractValues(algo, copy, criteria);
             boolean correct = isSorted(values, ascending);
@@ -40,7 +44,7 @@ public class AlgorithmBenchmark {
                 correct = false; // all algorithms must give the same ordering
             }
 
-            printRow(label, algo, correct);
+            printRow(label, algo, totalNanos, correct);
         }
     }
 
@@ -62,14 +66,18 @@ public class AlgorithmBenchmark {
 
     private void printHeader() {
         System.out.println();
-        System.out.printf("%-26s %-12s %12s %14s %12s %8s%n",
-                "Dataset", "Algorithm", "Time (ms)", "Comparisons", "Swaps/Moves", "Correct");
-        System.out.println("-".repeat(90));
+        System.out.printf("%-26s %-12s %12s %12s %14s %12s %8s%n",
+                "Dataset", "Algorithm", "Sort (ms)", "Total (ms)", "Comparisons", "Swaps/Moves", "Correct");
+        System.out.println("-".repeat(103));
     }
 
-    private void printRow(String label, SortingAlgorithm algo, boolean correct) {
-        System.out.printf("%-26s %-12s %12.3f %14d %12d %8s%n",
-                label, algo.getName(), algo.getExecutionTime() / 1_000_000.0,
+    // Sort (ms)  = time measured inside the algorithm (sorting only)
+    // Total (ms) = time measured by the benchmark with System.nanoTime() (includes list copying)
+    private void printRow(String label, SortingAlgorithm algo, long totalNanos, boolean correct) {
+        System.out.printf("%-26s %-12s %12.3f %12.3f %14d %12d %8s%n",
+                label, algo.getName(),
+                algo.getExecutionTime() / 1_000_000.0,
+                totalNanos / 1_000_000.0,
                 algo.getComparisons(), algo.getSwaps(), correct ? "YES" : "NO");
     }
 }
