@@ -10,7 +10,7 @@
                 "${workspaceFolder}\\bin",
                 "-sourcepath",
                 "${workspaceFolder}\\src",
-                "${workspaceFolder}\\src\\App\\Main.java"
+                "${workspaceFolder}\\src\\app\\Main.java"
             ],
             "problemMatcher": "$javac"
         }

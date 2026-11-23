@@ -1,5 +1,6 @@
 package DSA;
 
+import DSA.model.PerformanceRecord;
 import java.util.List;
 
 public interface SortingAlgorithm {

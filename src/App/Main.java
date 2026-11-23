@@ -1,5 +1,6 @@
 package App;
 
+import App.controller.ApplicationController;
 import javax.swing.SwingUtilities;
 
 public class Main {

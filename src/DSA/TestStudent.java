@@ -1,5 +1,7 @@
 package DSA;
 
+import DSA.model.Student;
+import DSA.algorithms.BubbleSort;
 public class TestStudent {
 
     public static void main(String[] args) {

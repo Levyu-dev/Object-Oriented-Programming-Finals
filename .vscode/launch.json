@@ -5,7 +5,7 @@
             "type": "java",
             "name": "Launch Learn to Code",
             "request": "launch",
-            "mainClass": "App.Main",
+            "mainClass": "app.Main",
             "cwd": "${workspaceFolder}",
             "classPaths": [
                 "${workspaceFolder}\\bin"
