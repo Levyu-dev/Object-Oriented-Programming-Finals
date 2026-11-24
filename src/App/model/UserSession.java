@@ -93,6 +93,7 @@ public class UserSession {
     private final Set<String> startedCourses = new HashSet<>();
     private final CourseCatalog courseCatalog = new CourseCatalog();
     private final File progressFile = new File("data/course-progress.properties");
+    private final File tutorialFile = new File("data/student-tutorial.properties");
 
     public UserSession() {
         loadCourseProgress();
@@ -145,6 +146,43 @@ public class UserSession {
 
     public boolean isStudentSession() {
         return currentStudent != null;
+    }
+
+    public boolean hasSeenStudentTutorial() {
+        if (!isStudentSession()) return true;
+        Properties properties = loadTutorialProperties();
+        return Boolean.parseBoolean(properties.getProperty(studentTutorialKey()));
+    }
+
+    public void markStudentTutorialSeen() {
+        if (!isStudentSession()) return;
+        Properties properties = loadTutorialProperties();
+        properties.setProperty(studentTutorialKey(), "true");
+        saveTutorialProperties(properties);
+    }
+
+    private String studentTutorialKey() {
+        return currentSection.trim().toUpperCase()
+                + "." + currentUserName.trim().replace(" ", "_").toLowerCase();
+    }
+
+    private Properties loadTutorialProperties() {
+        Properties properties = new Properties();
+        if (!tutorialFile.isFile()) return properties;
+        try (FileInputStream input = new FileInputStream(tutorialFile)) {
+            properties.load(input);
+        } catch (IOException ignored) {
+        }
+        return properties;
+    }
+
+    private void saveTutorialProperties(Properties properties) {
+        File parent = tutorialFile.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) return;
+        try (FileOutputStream output = new FileOutputStream(tutorialFile)) {
+            properties.store(output, "Learn to Code student tutorials");
+        } catch (IOException ignored) {
+        }
     }
 
     boolean isDemoTeacherSession() {
@@ -301,6 +339,7 @@ public class UserSession {
         }
         try {
             Files.deleteIfExists(progressFile.toPath());
+            Files.deleteIfExists(tutorialFile.toPath());
         } catch (IOException ex) {
             throw new IllegalStateException("Unable to clear saved course progress.", ex);
         }

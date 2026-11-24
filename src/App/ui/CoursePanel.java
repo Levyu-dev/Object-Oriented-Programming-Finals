@@ -9,7 +9,34 @@ import java.awt.*;
 import java.util.List;
 
 public class CoursePanel extends BaseScreen {
-    private final JPanel roadmap = new JPanel();
+    private static class RoadmapList extends JPanel implements Scrollable {
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return getPreferredSize();
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 16;
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return orientation == SwingConstants.VERTICAL ? visibleRect.height : visibleRect.width;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
+    }
+
+    private final JPanel roadmap = new RoadmapList();
     private final JLabel progressLabel = new JLabel();
 
     public CoursePanel(ApplicationController controller) {
@@ -43,6 +70,7 @@ public class CoursePanel extends BaseScreen {
 
         JScrollPane scroll = new JScrollPane(roadmap);
         scroll.setBorder(null);
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
 
         add(header, BorderLayout.NORTH);
@@ -76,7 +104,7 @@ public class CoursePanel extends BaseScreen {
             title.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
             title.setForeground(Theme.TEXT_DARK);
 
-            JTextArea summary = new JTextArea(lesson.getOverview(), 2, 30);
+            JTextArea summary = new JTextArea(lesson.getOverview(), 2, 0);
             summary.setEditable(false);
             summary.setLineWrap(true);
             summary.setWrapStyleWord(true);
@@ -136,7 +164,9 @@ public class CoursePanel extends BaseScreen {
         lessonContent.add(example);
 
         JScrollPane lessonScroll = new JScrollPane(lessonContent);
-        lessonScroll.setPreferredSize(new Dimension(430, 250));
+        int dialogWidth = Math.max(240, Math.min(430, getWidth() - 40));
+        int dialogHeight = Math.max(180, Math.min(320, getHeight() - 80));
+        lessonScroll.setPreferredSize(new Dimension(dialogWidth, dialogHeight));
         JOptionPane.showMessageDialog(
                 this, lessonScroll, lesson.getTitle(), JOptionPane.INFORMATION_MESSAGE);
 

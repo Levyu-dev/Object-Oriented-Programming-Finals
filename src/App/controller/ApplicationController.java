@@ -21,10 +21,10 @@ public class ApplicationController extends JFrame {
     private JPanel rootContainer = new JPanel(rootLayout);
 
     private CardLayout studentLayout = new CardLayout();
-    private JPanel studentContent = new JPanel(studentLayout);
+    private JPanel studentContent = new ResponsiveContentPanel(studentLayout);
 
     private CardLayout teacherLayout = new CardLayout();
-    private JPanel teacherContent = new JPanel(teacherLayout);
+    private JPanel teacherContent = new ResponsiveContentPanel(teacherLayout);
 
     private UserSession session = new UserSession();
     private DashboardPanel studentDash;
@@ -33,6 +33,37 @@ public class ApplicationController extends JFrame {
     private QuizPlayPanel quizPlayPanel;
     private TeacherDashboardPanel teacherDash;
     private ClassroomPanel teacherClass;
+
+    private static class ResponsiveContentPanel extends JPanel implements Scrollable {
+        private ResponsiveContentPanel(LayoutManager layout) {
+            super(layout);
+        }
+
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return getPreferredSize();
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 16;
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return orientation == SwingConstants.VERTICAL ? visibleRect.height : visibleRect.width;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
+    }
 
     public ApplicationController() {
         setTitle("Learn to Code");
@@ -77,20 +108,45 @@ public class ApplicationController extends JFrame {
         topBar.setBackground(Theme.DEEP_TEAL);
         topBar.setBorder(new EmptyBorder(8, 12, 8, 14));
 
-        JButton toggleBtn = Theme.createWhiteButton("Menu");
-        toggleBtn.setPreferredSize(new Dimension(65, 32));
-        toggleBtn.addActionListener(e -> {
-            sidebar.setVisible(!sidebar.isVisible());
-            shell.revalidate();
-            shell.repaint();
-        });
+        JButton toggleBtn = Theme.createWhiteButton("\u22EE");
+        toggleBtn.setFont(new Font(Theme.UI_FONT, Font.BOLD, 20));
+        toggleBtn.setPreferredSize(new Dimension(38, 32));
+        toggleBtn.setToolTipText("Toggle navigation menu");
 
         JLabel appTitle = new JLabel("Learn to Code", SwingConstants.RIGHT);
         appTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
         appTitle.setForeground(Theme.BRIGHT_LIME);
 
+        JPanel logoBadge = Theme.createRoundedCard(Theme.BRIGHT_LIME, 2);
+        logoBadge.setLayout(new BorderLayout());
+        logoBadge.setPreferredSize(new Dimension(34, 32));
+        JLabel logoMark = new JLabel("LC", SwingConstants.CENTER);
+        logoMark.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
+        logoMark.setForeground(Theme.DEEP_TEAL);
+        logoBadge.add(logoMark, BorderLayout.CENTER);
+
+        JPanel brand = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        brand.setOpaque(false);
+        brand.add(logoBadge);
+        brand.add(appTitle);
+
+        Runnable updateBrand = () -> {
+            appTitle.setVisible(sidebar.isVisible());
+            brand.revalidate();
+            brand.repaint();
+        };
+        sidebar.setVisible(getWidth() >= 700);
+        updateBrand.run();
+
+        toggleBtn.addActionListener(e -> {
+            sidebar.setVisible(!sidebar.isVisible());
+            updateBrand.run();
+            shell.revalidate();
+            shell.repaint();
+        });
+
         topBar.add(toggleBtn, BorderLayout.WEST);
-        topBar.add(appTitle, BorderLayout.EAST);
+        topBar.add(brand, BorderLayout.EAST);
 
         JScrollPane contentScroll = new JScrollPane(contentArea);
         contentScroll.setBorder(null);
@@ -106,6 +162,7 @@ public class ApplicationController extends JFrame {
             public void componentResized(java.awt.event.ComponentEvent event) {
                 boolean desktopWide = shell.getWidth() >= 700;
                 sidebar.setVisible(desktopWide);
+                updateBrand.run();
                 shell.revalidate();
             }
         });
@@ -312,9 +369,142 @@ public class ApplicationController extends JFrame {
             }
             session.loginStudent(name, section);
             showStudentScreen("STUDENT_DASH");
+            showStudentTutorialIfNeeded();
         } catch (InvalidMenuChoiceException ex) {
             showError(ex.getMessage());
         }
+    }
+
+    private void showStudentTutorialIfNeeded() {
+        if (session.hasSeenStudentTutorial()) return;
+
+        SwingUtilities.invokeLater(() -> {
+            JDialog tutorial = new JDialog(this, "Student Quick Tour", true);
+            tutorial.setResizable(false);
+            tutorial.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+            String[] titles = {"Welcome to Learn to Code", "Choose an activity", "Earn XP and track progress"};
+            String[] descriptions = {
+                "<html><div style='width:300px;'>Hi, "
+                        + session.getCurrentUserName()
+                        + "! This quick tour will show you where to start.</div></html>",
+                "<html><div style='width:300px;'>Use <b>Practice</b>, <b>Timed Quiz</b>, "
+                        + "<b>Final Boss</b>, or <b>Party Mode</b> from your dashboard.</div></html>",
+                "<html><div style='width:300px;'>Complete lessons and quizzes to earn XP. "
+                        + "Your progress and continue card update automatically.</div></html>"
+            };
+
+            JPanel card = new JPanel(new CardLayout());
+            card.setBackground(Theme.WHITE);
+            final JLabel[] pageLabels = new JLabel[3];
+            final JLabel[] dotLabels = new JLabel[3];
+
+            for (int i = 0; i < titles.length; i++) {
+                JPanel page = new JPanel();
+                page.setLayout(new BoxLayout(page, BoxLayout.Y_AXIS));
+                page.setBackground(Theme.WHITE);
+                page.setBorder(new EmptyBorder(20, 24, 16, 24));
+
+                JLabel icon = new JLabel(String.valueOf(i + 1), SwingConstants.CENTER);
+                icon.setOpaque(true);
+                icon.setBackground(Theme.BRIGHT_LIME);
+                icon.setForeground(Theme.TEXT_DARK);
+                icon.setFont(new Font(Theme.UI_FONT, Font.BOLD, 22));
+                icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+                icon.setPreferredSize(new Dimension(54, 54));
+                icon.setMaximumSize(new Dimension(54, 54));
+
+                JLabel title = new JLabel(titles[i], SwingConstants.CENTER);
+                title.setFont(new Font(Theme.UI_FONT, Font.BOLD, 18));
+                title.setForeground(Theme.TEXT_DARK);
+                title.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                JLabel description = new JLabel(descriptions[i], SwingConstants.CENTER);
+                description.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 13));
+                description.setForeground(Theme.TEXT_DARK);
+                description.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                page.add(icon);
+                page.add(Box.createVerticalStrut(14));
+                page.add(title);
+                page.add(Box.createVerticalStrut(8));
+                page.add(description);
+                card.add(page, "STEP_" + i);
+                pageLabels[i] = title;
+            }
+
+            JPanel footer = new JPanel(new BorderLayout(8, 8));
+            footer.setBackground(Theme.WHITE);
+            footer.setBorder(new EmptyBorder(8, 20, 16, 20));
+
+            JPanel dots = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+            dots.setBackground(Theme.WHITE);
+            for (int i = 0; i < dotLabels.length; i++) {
+                JLabel dot = new JLabel("\u2022");
+                dot.setFont(new Font(Theme.UI_FONT, Font.BOLD, 18));
+                dot.setForeground(i == 0 ? Theme.DEEP_TEAL : new Color(150, 170, 150));
+                dotLabels[i] = dot;
+                dots.add(dot);
+            }
+
+            JButton backButton = Theme.createWhiteButton("Back");
+            backButton.setPreferredSize(new Dimension(82, 34));
+            JButton nextButton = Theme.createPrimaryButton("Next");
+            nextButton.setPreferredSize(new Dimension(82, 34));
+            JButton skipButton = Theme.createWhiteButton("Skip");
+            skipButton.setPreferredSize(new Dimension(82, 34));
+
+            JPanel actionRow = new JPanel(new GridLayout(1, 3, 8, 0));
+            actionRow.setBackground(Theme.WHITE);
+            actionRow.add(backButton);
+            actionRow.add(skipButton);
+            actionRow.add(nextButton);
+            footer.add(dots, BorderLayout.NORTH);
+            footer.add(actionRow, BorderLayout.CENTER);
+
+            final int[] step = {0};
+            Runnable updateStep = () -> {
+                ((CardLayout) card.getLayout()).show(card, "STEP_" + step[0]);
+                backButton.setEnabled(step[0] > 0);
+                nextButton.setText(step[0] == titles.length - 1 ? "Got It" : "Next");
+                for (int i = 0; i < dotLabels.length; i++) {
+                    dotLabels[i].setForeground(i == step[0] ? Theme.DEEP_TEAL : new Color(150, 170, 150));
+                }
+            };
+
+            backButton.addActionListener(e -> {
+                if (step[0] > 0) {
+                    step[0]--;
+                    updateStep.run();
+                }
+            });
+            nextButton.addActionListener(e -> {
+                if (step[0] < titles.length - 1) {
+                    step[0]++;
+                    updateStep.run();
+                } else {
+                    tutorial.dispose();
+                }
+            });
+            skipButton.addActionListener(e -> tutorial.dispose());
+            tutorial.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosed(java.awt.event.WindowEvent event) {
+                    session.markStudentTutorialSeen();
+                }
+            });
+
+            JPanel content = new JPanel(new BorderLayout());
+            content.setBackground(Theme.WHITE);
+            content.add(card, BorderLayout.CENTER);
+            content.add(footer, BorderLayout.SOUTH);
+            tutorial.setContentPane(content);
+            tutorial.pack();
+            tutorial.setSize(390, 330);
+            tutorial.setLocationRelativeTo(this);
+            updateStep.run();
+            tutorial.setVisible(true);
+        });
     }
 
     private boolean requireStudentSession() {

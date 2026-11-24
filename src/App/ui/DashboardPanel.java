@@ -32,7 +32,7 @@ public class DashboardPanel extends BaseScreen {
 
         JPanel xpPanel = Theme.createRoundedCard(Theme.DEEP_TEAL, 12);
         xpPanel.setLayout(new BorderLayout(6, 6));
-        xpPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        xpPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         xpLabel = new JLabel("Level 1 - 0 XP");
         xpLabel.setForeground(Theme.BRIGHT_LIME);
@@ -71,8 +71,9 @@ public class DashboardPanel extends BaseScreen {
         topBox.add(Box.createVerticalStrut(10));
         topBox.add(continuePanel);
 
-        JPanel quickGrid = new JPanel(new GridLayout(2, 2, 10, 10));
+        JPanel quickGrid = new JPanel(new GridLayout(1, 4, 10, 0));
         quickGrid.setBackground(Theme.PALE_LIME);
+        quickGrid.setPreferredSize(new Dimension(0, 135));
 
         JButton b1 = Theme.createPrimaryButton("<html><center><b>Practice</b><br><small>Own pace</small></center></html>");
         b1.addActionListener(e -> controller.showStudentScreen("PRACTICE"));
@@ -91,12 +92,30 @@ public class DashboardPanel extends BaseScreen {
         quickGrid.add(b3);
         quickGrid.add(b4);
 
+        JPanel quickArea = new JPanel(new BorderLayout(0, 8));
+        quickArea.setBackground(Theme.PALE_LIME);
+        quickArea.add(quickGrid, BorderLayout.NORTH);
+        quickArea.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent event) {
+                int width = quickArea.getWidth();
+                int availableHeight = quickArea.getHeight() - 8;
+                if (width <= 0 || availableHeight <= 0) return;
+                int height = Math.min(180, Math.min(
+                        (int) Math.round(width * 0.45), availableHeight));
+                if (quickGrid.getPreferredSize().height != height) {
+                    quickGrid.setPreferredSize(new Dimension(0, height));
+                    quickArea.revalidate();
+                }
+            }
+        });
+
         JButton buddyBtn = Theme.createWhiteButton("<html><center><b>StudyBuddy:</b> Every bug you fix makes you better!</center></html>");
         buddyBtn.setPreferredSize(new Dimension(0, 46));
         buddyBtn.addActionListener(e -> controller.showAlert("StudyBuddy Tip: Keep fields private and use getters/setters!"));
 
         add(topBox, BorderLayout.NORTH);
-        add(quickGrid, BorderLayout.CENTER);
+        add(quickArea, BorderLayout.CENTER);
         add(buddyBtn, BorderLayout.SOUTH);
     }
 

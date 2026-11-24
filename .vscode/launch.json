@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "App.Main",
+            "projectName": "Object-Oriented-Programming-Finals_9c3ac429"
+        },
+        {
+            "type": "java",
             "name": "Launch Learn to Code",
             "request": "launch",
             "mainClass": "app.Main",
