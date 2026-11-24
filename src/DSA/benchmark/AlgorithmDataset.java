@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Random;
 
 public class AlgorithmDataset {
+    public static final long DEFAULT_DATASET_SEED = 42L;
     private static final String DATASET_CSV_HEADER =
             "Student_ID,Username,Quiz_Score,Total_XP,Accuracy_Percentage";
 
@@ -84,6 +85,10 @@ public class AlgorithmDataset {
 
     // 2. Generate datasets for sizes (100, 500, 1000, 5000) and all 6 conditions
     public List<PerformanceRecord> generateDataset(int size, Condition condition) {
+        return generateDataset(size, condition, DEFAULT_DATASET_SEED);
+    }
+
+    public List<PerformanceRecord> generateDataset(int size, Condition condition, long seed) {
         if (size < 0) {
             throw new IllegalArgumentException("Dataset size cannot be negative.");
         }
@@ -99,7 +104,7 @@ public class AlgorithmDataset {
         }
 
         int targetSize = (condition == Condition.SINGLE_RECORD) ? 1 : size;
-        Random rand = new Random(42);
+        Random rand = new Random(seed);
 
         for (int i = 1; i <= targetSize; i++) {
             String studentId = String.format("STU-%04d", i);

@@ -11,8 +11,7 @@ public class QuickSort {
         Accuracy, Score, XP
     }
 
-    // One shared Random (was created on every recursive call)
-    private static final Random RANDOM = new Random();
+    private static final long PIVOT_SEED = 42L;
 
     public static class SortStats{
         public int comparisons;
@@ -32,25 +31,33 @@ public class QuickSort {
         SortStats stats = new SortStats();
         long startTime = System.nanoTime();
 
-        quicksort(array, 0 , array.length - 1, ascending, criteria, stats);
+        quicksort(array, 0, array.length - 1, ascending, criteria, stats,
+                new Random(PIVOT_SEED));
 
         stats.exetime = System.nanoTime() - startTime;
         return stats;
     }
 
     public static void quicksort(PerformanceRecord[] array, int lowIndex, int highIndex, boolean ascending, SortBy criteria, SortStats stats) {
+        quicksort(array, lowIndex, highIndex, ascending, criteria, stats,
+                new Random(PIVOT_SEED));
+    }
+
+    private static void quicksort(PerformanceRecord[] array, int lowIndex, int highIndex,
+                                  boolean ascending, SortBy criteria, SortStats stats,
+                                  Random random) {
         if (lowIndex >= highIndex) {
             return;
         }
 
-        int pivotIndex = RANDOM.nextInt(highIndex - lowIndex + 1) + lowIndex;
+        int pivotIndex = random.nextInt(highIndex - lowIndex + 1) + lowIndex;
         double pivot = getValue(array[pivotIndex], criteria);
         swap(array, pivotIndex, highIndex, stats);
 
         int leftpoint = partition(array, lowIndex, highIndex, pivot, ascending, criteria, stats);
 
-        quicksort(array, lowIndex, leftpoint - 1, ascending, criteria, stats);
-        quicksort(array, leftpoint + 1, highIndex, ascending, criteria, stats);
+        quicksort(array, lowIndex, leftpoint - 1, ascending, criteria, stats, random);
+        quicksort(array, leftpoint + 1, highIndex, ascending, criteria, stats, random);
     }
 
     //Partitioning (Ascending and Descending Order)
@@ -127,25 +134,31 @@ public class QuickSort {
         SortStats stats = new SortStats();
         long startTime = System.nanoTime();
 
-        quicksort(array, 0 , array.length - 1, ascending, stats);
+        quicksort(array, 0, array.length - 1, ascending, stats,
+                new Random(PIVOT_SEED));
 
         stats.exetime = System.nanoTime() - startTime;
         return stats;
     }
 
     public static void quicksort(Student[] array, int lowIndex, int highIndex, boolean ascending, SortStats stats) {
+        quicksort(array, lowIndex, highIndex, ascending, stats, new Random(PIVOT_SEED));
+    }
+
+    private static void quicksort(Student[] array, int lowIndex, int highIndex,
+                                  boolean ascending, SortStats stats, Random random) {
         if (lowIndex >= highIndex) {
             return;
         }
 
-        int pivotIndex = RANDOM.nextInt(highIndex - lowIndex + 1) + lowIndex;
+        int pivotIndex = random.nextInt(highIndex - lowIndex + 1) + lowIndex;
         double pivot = array[pivotIndex].getXP();
         swap(array, pivotIndex, highIndex, stats);
 
         int leftpoint = partition(array, lowIndex, highIndex, pivot, ascending, stats);
 
-        quicksort(array, lowIndex, leftpoint - 1, ascending, stats);
-        quicksort(array, leftpoint + 1, highIndex, ascending, stats);
+        quicksort(array, lowIndex, leftpoint - 1, ascending, stats, random);
+        quicksort(array, leftpoint + 1, highIndex, ascending, stats, random);
     }
 
     //Partitioning (Ascending and Descending Order)

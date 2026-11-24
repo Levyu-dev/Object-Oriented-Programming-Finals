@@ -12,12 +12,17 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class AlgorithmBenchmarkPanel extends BaseScreen {
+    private static final int BENCHMARK_TRIALS = 5;
+
     private final List<JButton> datasetSizeButtons = new ArrayList<>();
     private final DefaultTableModel resultsModel = new DefaultTableModel(
-            new Object[]{"Algorithm", "Time (ms)", "Comparisons", "Swaps / Moves", "Correct"}, 0) {
+            new Object[]{"Algorithm", "Median Time (ms)", "Mean Comparisons",
+                "Mean Swaps / Moves", "Correct"}, 0) {
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
@@ -50,7 +55,7 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
         titleLabel.setForeground(Theme.TEXT_DARK);
 
         JLabel descriptionLabel = new JLabel(
-                "Compare Bubble, Merge, and Quick Sort on reproducible generated datasets.");
+                "Compare Bubble, Merge, and Quick Sort on reproducible pseudo-random datasets.");
         descriptionLabel.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 13));
         descriptionLabel.setForeground(Theme.TEXT_DARK);
         header.add(titleLabel);
@@ -181,9 +186,9 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
 
     private void refreshBenchmark() {
         String criterion = getSortCriterion();
-        List<PerformanceRecord> records = generateSelectedDataset();
         benchmarkSummaryLabel.setText(
-                "Results for " + selectedDatasetSize + " random records, sorted by "
+                "Results for " + selectedDatasetSize + " random records across "
+                        + BENCHMARK_TRIALS + " seeded trials, sorted by "
                         + sortCriterionBox.getSelectedItem() + " (descending)");
         resultsModel.setRowCount(0);
 
@@ -192,28 +197,52 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
                 new MergeSortAdapter(),
                 new QuickSortAdapter()
         };
-        double[] referenceValues = null;
-        for (SortingAlgorithm algorithm : algorithms) {
-            List<PerformanceRecord> sortedRecords = new ArrayList<>(records);
-            algorithm.sort(sortedRecords, criterion, false);
-            double[] sortedValues = extractValues(algorithm, sortedRecords, criterion);
-            boolean correct = isSorted(sortedValues, false)
-                    && (referenceValues == null
-                            || java.util.Arrays.equals(referenceValues, sortedValues));
-            if (referenceValues == null) {
-                referenceValues = sortedValues;
+        long[][] executionTimes = new long[algorithms.length][BENCHMARK_TRIALS];
+        long[][] comparisons = new long[algorithms.length][BENCHMARK_TRIALS];
+        long[][] swaps = new long[algorithms.length][BENCHMARK_TRIALS];
+        boolean correct = true;
+        AlgorithmDataset datasetGenerator = new AlgorithmDataset();
+        List<PerformanceRecord> leaderboardRecords = null;
+
+        for (int runIndex = 1; runIndex <= BENCHMARK_TRIALS; runIndex++) {
+            long seed = AlgorithmDataset.DEFAULT_DATASET_SEED + runIndex;
+            List<PerformanceRecord> records = datasetGenerator.generateDataset(
+                    selectedDatasetSize, AlgorithmDataset.Condition.RANDOM, seed);
+            if (leaderboardRecords == null) {
+                leaderboardRecords = copyRecords(records);
             }
 
+            double[] referenceValues = null;
+            for (int algorithmIndex = 0; algorithmIndex < algorithms.length; algorithmIndex++) {
+                SortingAlgorithm algorithm = algorithms[algorithmIndex];
+                List<PerformanceRecord> sortedRecords = copyRecords(records);
+                algorithm.sort(sortedRecords, criterion, false);
+                double[] sortedValues = extractValues(algorithm, sortedRecords, criterion);
+                correct &= isSorted(sortedValues, false)
+                        && (referenceValues == null
+                                || Arrays.equals(referenceValues, sortedValues));
+                if (referenceValues == null) {
+                    referenceValues = sortedValues;
+                }
+
+                int trialIndex = runIndex - 1;
+                executionTimes[algorithmIndex][trialIndex] = algorithm.getExecutionTime();
+                comparisons[algorithmIndex][trialIndex] = algorithm.getComparisons();
+                swaps[algorithmIndex][trialIndex] = algorithm.getSwaps();
+            }
+        }
+
+        printBenchmarkBreakdown(algorithms, executionTimes, comparisons, swaps);
+        for (int algorithmIndex = 0; algorithmIndex < algorithms.length; algorithmIndex++) {
             resultsModel.addRow(new Object[]{
-                    algorithm.getName(),
-                    algorithm.getExecutionTime() / 1_000_000.0,
-                    algorithm.getComparisons(),
-                    algorithm.getSwaps(),
+                    algorithms[algorithmIndex].getName(),
+                    getMedian(executionTimes[algorithmIndex]) / 1_000_000.0,
+                    getRoundedMean(comparisons[algorithmIndex]),
+                    getRoundedMean(swaps[algorithmIndex]),
                     correct ? "YES" : "NO"
             });
         }
 
-        List<PerformanceRecord> leaderboardRecords = new ArrayList<>(records);
         new MergeSortAdapter().sort(leaderboardRecords, criterion, false);
         Object[][] leaderboardRows = new Object[leaderboardRecords.size()][6];
         for (int index = 0; index < leaderboardRecords.size(); index++) {
@@ -230,6 +259,60 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
         leaderboardModel.setDataVector(leaderboardRows, new Object[]{
                 "Rank", "Student ID", "Name", "Quiz Score", "XP", "Accuracy"
         });
+    }
+
+    private List<PerformanceRecord> copyRecords(List<PerformanceRecord> records) {
+        List<PerformanceRecord> copy = new ArrayList<>(records.size());
+        for (PerformanceRecord record : records) {
+            copy.add(new PerformanceRecord(
+                    record.getStudentId(),
+                    record.getUsername(),
+                    record.getQuizScore(),
+                    record.getTotalXp(),
+                    record.getAccuracy()));
+        }
+        return copy;
+    }
+
+    private long getMedian(long[] values) {
+        long[] sortedValues = values.clone();
+        Arrays.sort(sortedValues);
+        return sortedValues[sortedValues.length / 2];
+    }
+
+    private long getRoundedMean(long[] values) {
+        long total = 0;
+        for (long value : values) {
+            total += value;
+        }
+        return Math.round((double) total / values.length);
+    }
+
+    private void printBenchmarkBreakdown(
+            SortingAlgorithm[] algorithms,
+            long[][] executionTimes,
+            long[][] comparisons,
+            long[][] swaps) {
+        System.out.printf(
+                Locale.ROOT,
+                "%n5-Run Benchmark Breakdown | Dataset: %d | Criterion: %s | Descending%n",
+                selectedDatasetSize,
+                sortCriterionBox.getSelectedItem());
+        System.out.println("Run\tSeed\tAlgorithm\tTime (ms)\tComparisons\tSwaps / Moves");
+        for (int trialIndex = 0; trialIndex < BENCHMARK_TRIALS; trialIndex++) {
+            long seed = AlgorithmDataset.DEFAULT_DATASET_SEED + trialIndex + 1;
+            for (int algorithmIndex = 0; algorithmIndex < algorithms.length; algorithmIndex++) {
+                System.out.printf(
+                        Locale.ROOT,
+                        "%d\t%d\t%s\t%.6f\t%d\t%d%n",
+                        trialIndex + 1,
+                        seed,
+                        algorithms[algorithmIndex].getName(),
+                        executionTimes[algorithmIndex][trialIndex] / 1_000_000.0,
+                        comparisons[algorithmIndex][trialIndex],
+                        swaps[algorithmIndex][trialIndex]);
+            }
+        }
     }
 
     private double[] extractValues(
@@ -249,11 +332,6 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
             }
         }
         return true;
-    }
-
-    private List<PerformanceRecord> generateSelectedDataset() {
-        return new AlgorithmDataset().generateDataset(
-                selectedDatasetSize, AlgorithmDataset.Condition.RANDOM);
     }
 
     @Override
