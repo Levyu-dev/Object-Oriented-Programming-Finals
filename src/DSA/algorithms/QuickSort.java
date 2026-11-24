@@ -6,7 +6,7 @@ import java.util.*;
 
 public class QuickSort {
 
-    // NEW: XP added
+    // NEW: XP added 
     public enum SortBy {
         Accuracy, Score, XP
     }
@@ -207,3 +207,4 @@ public class QuickSort {
         return Double.compare(a, b);
     }
 }
+//

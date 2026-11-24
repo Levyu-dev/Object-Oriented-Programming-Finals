@@ -3,8 +3,8 @@ package DSA;
 import DSA.adapters.BubbleSortAdapter;
 import DSA.adapters.MergeSortAdapter;
 import DSA.adapters.QuickSortAdapter;
-import DSA.model.PerformanceRecord;
 import DSA.benchmark.AlgorithmBenchmark;
+import DSA.model.PerformanceRecord;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -115,3 +115,4 @@ public class SortingManager {
         }
     }
 }
+//

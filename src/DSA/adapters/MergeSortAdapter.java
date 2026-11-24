@@ -23,3 +23,4 @@ public class MergeSortAdapter extends BaseAdapter {
         for (int i = 0; i < list.size(); i++) records.set(i, list.get(i));
     }
 }
+//

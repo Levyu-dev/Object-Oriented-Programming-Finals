@@ -35,3 +35,4 @@ public class BenchmarkRunner {
         new AlgorithmBenchmark().runAllSizes(datasets, criteria, ascending);
     }
 }
+//

@@ -23,3 +23,4 @@ public class QuickSortAdapter extends BaseAdapter {
         for (int i = 0; i < array.length; i++) records.set(i, array[i]);
     }
 }
+//

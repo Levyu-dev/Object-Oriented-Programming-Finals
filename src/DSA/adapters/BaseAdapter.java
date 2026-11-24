@@ -10,3 +10,4 @@ public abstract class BaseAdapter implements SortingAlgorithm {
     public long getSwaps() { return swaps; }
     public long getExecutionTime() { return time; }
 }
+//
