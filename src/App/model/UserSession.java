@@ -62,6 +62,8 @@ public class UserSession {
         private final String section;
         private int xp;
         private int completedQuizzes;
+        private long totalCorrectAnswers;
+        private long totalQuestions;
 
         public StudentRecord(String name, String section, int xp, int completedQuizzes) {
             this.name = name;
@@ -74,10 +76,31 @@ public class UserSession {
         public String getSection() { return section; }
         public int getXp() { return xp; }
         public int getCompletedQuizzes() { return completedQuizzes; }
+        public int getAverageQuizScore() {
+            return totalQuestions == 0
+                    ? 0
+                    : (int) Math.round(totalCorrectAnswers * 100.0 / totalQuestions);
+        }
+        public double getAccuracy() {
+            return totalQuestions == 0
+                    ? 0.0
+                    : totalCorrectAnswers * 100.0 / totalQuestions;
+        }
 
         public void addPoints(int points) {
             xp += points;
             completedQuizzes++;
+        }
+
+        private void recordQuizResult(int points, int correctAnswers, int questionCount) {
+            if (points < 0 || questionCount <= 0
+                    || correctAnswers < 0 || correctAnswers > questionCount) {
+                throw new IllegalArgumentException("Invalid quiz result.");
+            }
+            xp += points;
+            completedQuizzes++;
+            totalCorrectAnswers += correctAnswers;
+            totalQuestions += questionCount;
         }
     }
 
@@ -188,6 +211,10 @@ public class UserSession {
 
     public void addExperiencePoints(int points) {
         getCurrentStudent().addPoints(points);
+    }
+
+    public void addExperiencePoints(int points, int correctAnswers, int questionCount) {
+        getCurrentStudent().recordQuizResult(points, correctAnswers, questionCount);
     }
 
     public CourseCatalog getCourseCatalog() {

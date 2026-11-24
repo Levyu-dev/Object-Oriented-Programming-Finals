@@ -1,19 +1,30 @@
 package DSA.benchmark;
 
+import App.model.UserSession;
+import DSA.SortingAlgorithm;
+import DSA.adapters.BaseAdapter;
+import DSA.adapters.BubbleSortAdapter;
+import DSA.adapters.MergeSortAdapter;
+import DSA.adapters.QuickSortAdapter;
 import DSA.model.PerformanceRecord;
 import DSA.model.Student;
 import DSA.algorithms.MergeSort;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 public class AlgorithmDataset {
+    private static final String DATASET_CSV_HEADER =
+            "Student_ID,Username,Quiz_Score,Total_XP,Accuracy_Percentage";
 
     public enum Condition {
         RANDOM,
@@ -30,9 +41,6 @@ public class AlgorithmDataset {
         this.masterDataset = new ArrayList<>();
     }
 
-    // 1. Retrieve & convert real student data (Student objects) into dataset records.
-    //    (If your Phase 1 UserSession is in this folder you can add your old
-    //     loadFromUserSession method back here.)
     public void loadFromStudents(List<Student> students) {
         this.masterDataset.clear();
         int idCounter = 1;
@@ -50,8 +58,39 @@ public class AlgorithmDataset {
         }
     }
 
+    public void loadFromUserSession(UserSession session, String section) {
+        if (session == null) {
+            throw new IllegalArgumentException("User session cannot be null.");
+        }
+        if (section == null || section.trim().isEmpty()) {
+            throw new IllegalArgumentException("Section cannot be blank.");
+        }
+
+        List<PerformanceRecord> records = new ArrayList<>();
+        int idCounter = 1;
+        for (UserSession.StudentRecord student : session.getStudentsInSection(section.trim())) {
+            PerformanceRecord record = new PerformanceRecord(
+                    String.format(Locale.ROOT, "STU-%04d", idCounter++),
+                    student.getName(),
+                    student.getAverageQuizScore(),
+                    student.getXp(),
+                    student.getAccuracy());
+            if (isValidRecord(record)) {
+                records.add(record);
+            }
+        }
+        masterDataset = records;
+    }
+
     // 2. Generate datasets for sizes (100, 500, 1000, 5000) and all 6 conditions
     public List<PerformanceRecord> generateDataset(int size, Condition condition) {
+        if (size < 0) {
+            throw new IllegalArgumentException("Dataset size cannot be negative.");
+        }
+        if (condition == null) {
+            throw new IllegalArgumentException("Dataset condition cannot be null.");
+        }
+
         List<PerformanceRecord> dataset = new ArrayList<>();
 
         if (condition == Condition.EMPTY) {
@@ -60,7 +99,7 @@ public class AlgorithmDataset {
         }
 
         int targetSize = (condition == Condition.SINGLE_RECORD) ? 1 : size;
-        Random rand = new Random();
+        Random rand = new Random(42);
 
         for (int i = 1; i <= targetSize; i++) {
             String studentId = String.format("STU-%04d", i);
@@ -90,7 +129,7 @@ public class AlgorithmDataset {
                 break;
             case RANDOM:
             case DUPLICATES:
-                Collections.shuffle(dataset);
+                Collections.shuffle(dataset, rand);
                 break;
             default:
                 break;
@@ -107,7 +146,8 @@ public class AlgorithmDataset {
         if (record.getUsername() == null || record.getUsername().trim().isEmpty()) return false;
         if (record.getQuizScore() < 0 || record.getQuizScore() > 100) return false;
         if (record.getTotalXp() < 0) return false;
-        if (record.getAccuracy() < 0.0 || record.getAccuracy() > 100.0) return false;
+        if (Double.isNaN(record.getAccuracy()) || Double.isInfinite(record.getAccuracy())
+                || record.getAccuracy() < 0.0 || record.getAccuracy() > 100.0) return false;
         return true;
     }
 
@@ -127,20 +167,172 @@ public class AlgorithmDataset {
     }
 
     // 5. Export prepared datasets to CSV files for documentation and submission
-    public void exportToCSV(List<PerformanceRecord> records, String filePath) {
+    public void exportToCSV(List<PerformanceRecord> records, String filePath) throws IOException {
         File file = new File(filePath);
-        if (file.getParentFile() != null) {
-            file.getParentFile().mkdirs();
-        }
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-            writer.println("Student_ID,Username,Quiz_Score,Total_XP,Accuracy_Percentage");
+        createParentDirectory(file);
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                file.toPath(), StandardCharsets.UTF_8)) {
+            writer.write(DATASET_CSV_HEADER);
+            writer.newLine();
             for (PerformanceRecord r : records) {
-                writer.printf("%s,%s,%d,%d,%.2f%n",
-                        r.getStudentId(), r.getUsername(), r.getQuizScore(), r.getTotalXp(), r.getAccuracy());
+                writer.write(String.format(Locale.ROOT, "%s,%s,%d,%d,%.2f%n",
+                        escapeCsv(r.getStudentId()), escapeCsv(r.getUsername()),
+                        r.getQuizScore(), r.getTotalXp(), r.getAccuracy()));
             }
-        } catch (IOException e) {
-            System.err.println("Error exporting dataset to CSV: " + e.getMessage());
         }
+    }
+
+    public List<PerformanceRecord> loadFromCSV(String filePath) throws IOException {
+        List<PerformanceRecord> records = new ArrayList<>();
+        try (BufferedReader reader = Files.newBufferedReader(
+                new File(filePath).toPath(), StandardCharsets.UTF_8)) {
+            String header = reader.readLine();
+            if (!DATASET_CSV_HEADER.equals(header)) {
+                throw new IOException("Unexpected dataset CSV header in " + filePath);
+            }
+
+            String line;
+            int lineNumber = 1;
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
+                List<String> fields;
+                try {
+                    fields = parseCsvLine(line);
+                    if (fields.size() != 5) {
+                        throw new IllegalArgumentException("Expected 5 columns.");
+                    }
+                    PerformanceRecord record = new PerformanceRecord(
+                            fields.get(0),
+                            fields.get(1),
+                            Integer.parseInt(fields.get(2)),
+                            Integer.parseInt(fields.get(3)),
+                            Double.parseDouble(fields.get(4)));
+                    if (!isValidRecord(record)) {
+                        throw new IllegalArgumentException("Record contains invalid values.");
+                    }
+                    records.add(record);
+                } catch (IllegalArgumentException exception) {
+                    throw new IOException(
+                            "Invalid dataset CSV at line " + lineNumber + ": "
+                                    + exception.getMessage(),
+                            exception);
+                }
+            }
+        }
+
+        masterDataset = records;
+        return getDatasetCopy();
+    }
+
+    public void exportBenchmarkResultsCSV(
+            String filePath, String criteria, boolean ascending) throws IOException {
+        if (!SortingAlgorithm.CRITERIA_SCORE.equals(criteria)
+                && !SortingAlgorithm.CRITERIA_XP.equals(criteria)
+                && !SortingAlgorithm.CRITERIA_ACCURACY.equals(criteria)) {
+            throw new IllegalArgumentException("Unknown sorting criteria: " + criteria);
+        }
+
+        File file = new File(filePath);
+        createParentDirectory(file);
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                file.toPath(), StandardCharsets.UTF_8)) {
+            writer.write("Dataset_Size,Condition,Algorithm,Time_ms,Comparisons,Swaps_Moves");
+            writer.newLine();
+
+            int[] sizes = {100, 500, 1000, 5000};
+            for (int size : sizes) {
+                List<PerformanceRecord> original = generateDataset(size, Condition.RANDOM);
+                BaseAdapter[] algorithms = {
+                        new BubbleSortAdapter(),
+                        new MergeSortAdapter(),
+                        new QuickSortAdapter()
+                };
+                for (BaseAdapter algorithm : algorithms) {
+                    List<PerformanceRecord> sortedRecords = copyRecords(original);
+                    algorithm.sort(sortedRecords, criteria, ascending);
+                    writer.write(String.format(
+                            Locale.ROOT,
+                            "%d,RANDOM,%s,%.6f,%d,%d%n",
+                            size,
+                            escapeCsv(algorithm.getName()),
+                            algorithm.getExecutionTime() / 1_000_000.0,
+                            algorithm.getComparisons(),
+                            algorithm.getSwaps()));
+                }
+            }
+        }
+    }
+
+    private static void createParentDirectory(File file) throws IOException {
+        File parent = file.getParentFile();
+        if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+            throw new IOException("Unable to create directory: " + parent);
+        }
+    }
+
+    private static List<PerformanceRecord> copyRecords(List<PerformanceRecord> records) {
+        List<PerformanceRecord> copy = new ArrayList<>(records.size());
+        for (PerformanceRecord record : records) {
+            copy.add(new PerformanceRecord(
+                    record.getStudentId(),
+                    record.getUsername(),
+                    record.getQuizScore(),
+                    record.getTotalXp(),
+                    record.getAccuracy()));
+        }
+        return copy;
+    }
+
+    private static List<String> parseCsvLine(String line) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder field = new StringBuilder();
+        boolean quoted = false;
+        boolean quoteClosed = false;
+
+        for (int index = 0; index < line.length(); index++) {
+            char character = line.charAt(index);
+            if (quoted) {
+                if (character == '"') {
+                    if (index + 1 < line.length() && line.charAt(index + 1) == '"') {
+                        field.append('"');
+                        index++;
+                    } else {
+                        quoted = false;
+                        quoteClosed = true;
+                    }
+                } else {
+                    field.append(character);
+                }
+            } else if (character == ',') {
+                fields.add(field.toString());
+                field.setLength(0);
+                quoteClosed = false;
+            } else if (character == '"' && field.length() == 0 && !quoteClosed) {
+                quoted = true;
+            } else if (quoteClosed) {
+                throw new IllegalArgumentException("Unexpected character after quoted field.");
+            } else {
+                field.append(character);
+            }
+        }
+
+        if (quoted) {
+            throw new IllegalArgumentException("Unclosed quoted field.");
+        }
+        fields.add(field.toString());
+        return fields;
+    }
+
+    private static String escapeCsv(String value) {
+        if (value.indexOf(',') < 0 && value.indexOf('"') < 0
+                && value.indexOf('\n') < 0 && value.indexOf('\r') < 0) {
+            return value;
+        }
+        return "\"" + value.replace("\"", "\"\"") + "\"";
     }
 
     // 6. Formatted Leaderboard Sorting Demonstration
@@ -160,7 +352,7 @@ public class AlgorithmDataset {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         AlgorithmDataset manager = new AlgorithmDataset();
 
         // 1. Load & export real student data
@@ -211,5 +403,9 @@ public class AlgorithmDataset {
         ArrayList<PerformanceRecord> sorted = new ArrayList<>(manager.getDatasetCopy());
         MergeSort.sortByQuizScore(sorted, false);
         manager.printLeaderboardDemo(sorted, "LEADERBOARD AFTER SORTING (DESCENDING QUIZ SCORE)", 5);
+
+        manager.exportBenchmarkResultsCSV(
+                "datasets/benchmark_results.csv", SortingAlgorithm.CRITERIA_SCORE, false);
+        System.out.println("\nExported benchmark results to datasets/benchmark_results.csv");
     }
 }

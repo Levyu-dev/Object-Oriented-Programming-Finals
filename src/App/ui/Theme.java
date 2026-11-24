@@ -9,19 +9,20 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ContainerAdapter;
 import java.awt.event.ContainerEvent;
+import java.io.File;
 
 public class Theme {
     public static final String UI_FONT = "Segoe UI";
 
-    // Balanced Lime & Deep Teal Palette (Neon replaced with fresh Pistachio-Lime)
-    public static final Color PALE_LIME = new Color(236, 255, 182);      // #ecffb6 (Soft Pale Lime Background)
-    public static final Color BRIGHT_LIME = new Color(184, 219, 72);     // #b8db48 (Calm Pistachio-Lime Accent)
-    public static final Color SOFT_LIME_CARD = new Color(224, 246, 162); // Soft Mint-Lime for Cards
-    public static final Color DEEP_TEAL = new Color(0, 84, 95);          // #00545f (Deep Teal)
-    public static final Color DEEP_TEAL_HOVER = new Color(0, 62, 70);    // Darker Teal for hover
-    public static final Color TEXT_DARK = new Color(0, 58, 66);          // Rich Deep Teal for crisp reading
-    public static final Color WHITE = Color.WHITE;
-    public static final Color INPUT_BACKGROUND = new Color(250, 252, 243);
+    // Sage Green & Deep Teal Palette
+    public static final Color PALE_LIME = new Color(241, 245, 233);
+    public static final Color BRIGHT_LIME = new Color(201, 229, 138);
+    public static final Color SOFT_LIME_CARD = new Color(225, 240, 184);
+    public static final Color DEEP_TEAL = new Color(0, 84, 95);
+    public static final Color DEEP_TEAL_HOVER = new Color(0, 62, 70);
+    public static final Color TEXT_DARK = new Color(35, 74, 64);
+    public static final Color WHITE = new Color(251, 252, 246);
+    public static final Color INPUT_BACKGROUND = new Color(251, 252, 246);
     public static final Color INPUT_BORDER = new Color(0, 84, 95, 90);
     private static final String TEXT_STYLE_APPLIED = "App.textStyleApplied";
     private static final String TEXT_STYLE_LISTENER_ADDED = "App.textStyleListenerAdded";
@@ -87,14 +88,16 @@ public class Theme {
         field.setForeground(TEXT_DARK);
         field.setBackground(INPUT_BACKGROUND);
         field.setCaretColor(DEEP_TEAL);
-        field.setBorder(new EmptyBorder(6, 9, 6, 9));
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(INPUT_BORDER),
+                new EmptyBorder(6, 9, 6, 9)));
     }
 
     public static void styleComboBox(JComboBox<?> comboBox) {
         comboBox.setFont(new Font(UI_FONT, Font.PLAIN, 14));
         comboBox.setForeground(TEXT_DARK);
         comboBox.setBackground(INPUT_BACKGROUND);
-        comboBox.setBorder(new EmptyBorder(6, 9, 6, 9));
+        comboBox.setBorder(BorderFactory.createLineBorder(INPUT_BORDER));
         comboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(
@@ -143,6 +146,8 @@ public class Theme {
                         RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 graphics2D.setColor(getModel().isRollover() ? BRIGHT_LIME : getBackground());
                 graphics2D.fillRoundRect(0, 0, getWidth(), getHeight(), 22, 22);
+                graphics2D.setColor(new Color(0, 84, 95, 80));
+                graphics2D.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 22, 22);
                 graphics2D.dispose();
                 super.paintComponent(graphics);
             }
@@ -164,8 +169,10 @@ public class Theme {
                 Graphics2D graphics2D = (Graphics2D) graphics.create();
                 graphics2D.setRenderingHint(
                         RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                graphics2D.setColor(new Color(0, 84, 95, 45));
+                graphics2D.fillOval(1, 2, getWidth() - 2, getHeight() - 2);
                 graphics2D.setColor(getModel().isRollover() ? BRIGHT_LIME : WHITE);
-                graphics2D.fillOval(0, 0, getWidth() - 1, getHeight() - 1);
+                graphics2D.fillOval(0, 0, getWidth() - 2, getHeight() - 2);
                 graphics2D.dispose();
                 super.paintComponent(graphics);
             }
@@ -229,5 +236,23 @@ public class Theme {
         roundedCard.setOpaque(false);
         roundedCard.setBorder(new EmptyBorder(padding, padding, padding, padding));
         return roundedCard;
+    }
+
+    public static ImageIcon loadAssetIcon(String path, int width, int height) {
+        File asset = new File(path);
+        if (!asset.isFile()) {
+            System.err.println("Asset not found: " + path);
+            return null;
+        }
+
+        ImageIcon originalIcon = new ImageIcon(asset.getPath());
+        if (originalIcon.getIconWidth() <= 0 || originalIcon.getIconHeight() <= 0) {
+            System.err.println("Unable to load image asset: " + path);
+            return null;
+        }
+
+        Image scaledImage = originalIcon.getImage().getScaledInstance(
+                width, height, Image.SCALE_SMOOTH);
+        return new ImageIcon(scaledImage);
     }
 }

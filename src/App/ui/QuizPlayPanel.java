@@ -302,7 +302,8 @@ public class QuizPlayPanel extends BaseScreen {
         if (timedQuizTimer != null) {
             timedQuizTimer.stop();
         }
-        controller.getSession().addExperiencePoints(earnedExperiencePoints);
+        controller.getSession().addExperiencePoints(
+                earnedExperiencePoints, score, quizQuestions.size());
         controller.showAlert(resultMessage + "\nYour Final Score: " + score + "/" + quizQuestions.size()
                 + "\nEarned: +" + earnedExperiencePoints + " points");
         controller.showStudentScreen("STUDENT_DASH");

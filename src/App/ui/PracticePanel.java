@@ -57,6 +57,7 @@ public class PracticePanel extends BaseScreen {
 
         for (String topic : topics) {
             JButton topicButton = Theme.createPrimaryButton(topic);
+            topicButton.setPreferredSize(new Dimension(0, 42));
             topicButtons.add(topicButton);
             if (topic.equals(selectedTopicName[0])) {
                 topicButton.setBackground(Theme.BRIGHT_LIME);

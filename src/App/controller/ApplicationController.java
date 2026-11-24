@@ -5,6 +5,7 @@ import App.model.QuizQuestionBank;
 import App.model.UserSession;
 import App.util.InvalidMenuChoiceException;
 import App.ui.ClassroomPanel;
+import App.ui.AlgorithmBenchmarkPanel;
 import App.ui.CoursePanel;
 import App.ui.DashboardPanel;
 import App.ui.PracticePanel;
@@ -33,6 +34,7 @@ public class ApplicationController extends JFrame {
     private QuizPlayPanel quizPlayPanel;
     private TeacherDashboardPanel teacherDashboardPanel;
     private ClassroomPanel teacherClassroomPanel;
+    private AlgorithmBenchmarkPanel teacherBenchmarkPanel;
 
     private static class ResponsiveContentPanel extends JPanel implements Scrollable {
         private ResponsiveContentPanel(LayoutManager layout) {
@@ -94,8 +96,10 @@ public class ApplicationController extends JFrame {
 
         teacherDashboardPanel = new TeacherDashboardPanel(this);
         teacherClassroomPanel = new ClassroomPanel(this, true);
+        teacherBenchmarkPanel = new AlgorithmBenchmarkPanel(this);
         teacherScreenContainer.add(teacherDashboardPanel, "TEACHER_DASH");
         teacherScreenContainer.add(teacherClassroomPanel, "TEACHER_CLASS");
+        teacherScreenContainer.add(teacherBenchmarkPanel, "TEACHER_BENCHMARK");
         rootScreenContainer.add(
                 buildMobileShell(new SidebarNav(this, true), teacherScreenContainer), "TEACHER_APP");
 
@@ -120,10 +124,16 @@ public class ApplicationController extends JFrame {
         appTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
         appTitle.setForeground(Theme.BRIGHT_LIME);
 
-        JPanel logoBadge = Theme.createRoundedCard(Theme.BRIGHT_LIME, 2);
+        JPanel logoBadge = Theme.createRoundedCard(Theme.WHITE, 2);
         logoBadge.setLayout(new BorderLayout());
         logoBadge.setPreferredSize(new Dimension(34, 32));
-        JLabel logoMark = new JLabel("LC", SwingConstants.CENTER);
+        JLabel logoMark = new JLabel("", SwingConstants.CENTER);
+        ImageIcon logoIcon = Theme.loadAssetIcon("assets/logo/logo.png", 28, 28);
+        if (logoIcon != null) {
+            logoMark.setIcon(logoIcon);
+        } else {
+            logoMark.setText("LC");
+        }
         logoMark.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
         logoMark.setForeground(Theme.DEEP_TEAL);
         logoBadge.add(logoMark, BorderLayout.CENTER);
@@ -254,6 +264,9 @@ public class ApplicationController extends JFrame {
     public void showTeacherScreen(String screenName) {
         teacherDashboardPanel.refresh();
         teacherClassroomPanel.refresh();
+        if ("TEACHER_BENCHMARK".equals(screenName)) {
+            teacherBenchmarkPanel.refresh();
+        }
         rootScreenLayout.show(rootScreenContainer, "TEACHER_APP");
         teacherScreenLayout.show(teacherScreenContainer, screenName);
     }

@@ -2,11 +2,6 @@ package App.ui;
 
 import App.controller.ApplicationController;
 import App.model.UserSession;
-import DSA.model.PerformanceRecord;
-import DSA.SortingAlgorithm;
-import DSA.adapters.BubbleSortAdapter;
-import DSA.adapters.MergeSortAdapter;
-import DSA.adapters.QuickSortAdapter;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -19,9 +14,6 @@ public class ClassroomPanel extends BaseScreen {
     private JList<String> assignmentList;
     private JTextArea leaderboardArea;
     private JComboBox<String> leaderboardSortBox;
-    private JComboBox<String> leaderboardAlgorithmBox;
-    private JButton leaderboardMetricsButton;
-    private boolean showLeaderboardMetrics;
     private JTextField quizTitleField;
     private DefaultListModel<String> draftQuestionModel;
     private JList<String> draftQuestionList;
@@ -148,33 +140,9 @@ public class ClassroomPanel extends BaseScreen {
             Theme.styleComboBox(leaderboardSortBox);
             leaderboardSortBox.addActionListener(event -> refreshLeaderboard());
 
-            leaderboardAlgorithmBox = new JComboBox<>(new String[]{
-                    "Merge Sort", "Bubble Sort", "Quick Sort"});
-            Theme.styleComboBox(leaderboardAlgorithmBox);
-            leaderboardAlgorithmBox.addActionListener(event -> refreshLeaderboard());
-
-            leaderboardMetricsButton = Theme.createWhiteButton("Show DSA Metrics");
-            leaderboardMetricsButton.setPreferredSize(new Dimension(150, 32));
-            leaderboardMetricsButton.addActionListener(event -> {
-                showLeaderboardMetrics = !showLeaderboardMetrics;
-                leaderboardMetricsButton.setText(showLeaderboardMetrics
-                        ? "Hide DSA Metrics" : "Show DSA Metrics");
-                refreshLeaderboard();
-            });
-
-            JPanel algorithmControls = new JPanel(new BorderLayout(6, 0));
-            algorithmControls.setOpaque(false);
-            JLabel algorithmNameLabel = new JLabel("Algorithm:");
-            algorithmNameLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
-            algorithmNameLabel.setForeground(Theme.TEXT_DARK);
-            algorithmControls.add(algorithmNameLabel, BorderLayout.WEST);
-            algorithmControls.add(leaderboardAlgorithmBox, BorderLayout.CENTER);
-            algorithmControls.add(leaderboardMetricsButton, BorderLayout.EAST);
-
             leaderboardHeader.add(leaderboardTitleLabel, BorderLayout.WEST);
             leaderboardHeader.add(leaderboardSortBox, BorderLayout.EAST);
             classToolsCard.add(leaderboardHeader, BorderLayout.NORTH);
-            classToolsCard.add(algorithmControls, BorderLayout.SOUTH);
 
             leaderboardArea = new JTextArea();
             leaderboardArea.setEditable(false);
@@ -424,81 +392,31 @@ public class ClassroomPanel extends BaseScreen {
         UserSession userSession = controller.getSession();
         String sectionName = userSession.getCurrentSection();
         List<UserSession.StudentRecord> students = userSession.getStudentsInSection(sectionName);
-        ArrayList<PerformanceRecord> studentPerformanceRecords = new ArrayList<>();
         StringBuilder leaderboardText = new StringBuilder();
 
-        for (UserSession.StudentRecord student : students) {
-            studentPerformanceRecords.add(new PerformanceRecord(
-                    student.getName(),
-                    student.getName(),
-                    student.getCompletedQuizzes(),
-                    student.getXp(),
-                    0));
+        String sortCriterion = (String) leaderboardSortBox.getSelectedItem();
+        if ("Completed Quizzes".equals(sortCriterion)) {
+            students.sort((firstStudent, secondStudent) -> {
+                int quizCountOrder = Integer.compare(
+                        secondStudent.getCompletedQuizzes(), firstStudent.getCompletedQuizzes());
+                return quizCountOrder != 0
+                        ? quizCountOrder
+                        : Integer.compare(secondStudent.getXp(), firstStudent.getXp());
+            });
         }
 
-        if (studentPerformanceRecords.isEmpty()) {
+        if (students.isEmpty()) {
             leaderboardText.append("No students in this section yet.");
-            leaderboardArea.setText(leaderboardText.toString());
-            leaderboardArea.setCaretPosition(0);
-            return;
-        }
-
-        if (leaderboardSortBox != null) {
-            String sortCriterion = (String) leaderboardSortBox.getSelectedItem();
-            String sortingCriterion = "Completed Quizzes".equals(sortCriterion)
-                    ? SortingAlgorithm.CRITERIA_SCORE
-                    : SortingAlgorithm.CRITERIA_XP;
-
-            String selectedAlgorithmName = (String) leaderboardAlgorithmBox.getSelectedItem();
-            SortingAlgorithm sortingAlgorithm;
-            if ("Bubble Sort".equals(selectedAlgorithmName)) {
-                sortingAlgorithm = new BubbleSortAdapter();
-            } else if ("Quick Sort".equals(selectedAlgorithmName)) {
-                sortingAlgorithm = new QuickSortAdapter();
-            } else {
-                sortingAlgorithm = new MergeSortAdapter();
+        } else {
+            leaderboardText.append("Sorted by ").append(sortCriterion).append("\n\n");
+            int rank = 1;
+            for (UserSession.StudentRecord student : students) {
+                leaderboardText.append(rank++)
+                        .append(". @").append(student.getName())
+                        .append(" - ").append(student.getXp()).append(" XP")
+                        .append(" | Quizzes: ").append(student.getCompletedQuizzes())
+                        .append("\n");
             }
-            sortingAlgorithm.sort(studentPerformanceRecords, sortingCriterion, false);
-
-            if (showLeaderboardMetrics) {
-                leaderboardText.append("\n");
-                leaderboardText.append("Algorithm: ").append(sortingAlgorithm.getName()).append("\n");
-                leaderboardText.append("Comparisons: ").append(sortingAlgorithm.getComparisons()).append("\n");
-                leaderboardText.append("Swaps/Moves: ").append(sortingAlgorithm.getSwaps()).append("\n");
-                leaderboardText.append(String.format("Time: %.3f ms",
-                        sortingAlgorithm.getExecutionTime() / 1_000_000.0));
-
-                leaderboardText.append("\n\nAlgorithm Comparison:\n");
-                leaderboardText.append(String.format("%-12s %12s %12s %10s%n",
-                        "Algorithm", "Comparisons", "Swaps/Moves", "Time(ms)"));
-                SortingAlgorithm[] comparisonAlgorithms = {
-                        new BubbleSortAdapter(),
-                        new MergeSortAdapter(),
-                        new QuickSortAdapter()
-                };
-                for (SortingAlgorithm benchmarkAlgorithm : comparisonAlgorithms) {
-                    ArrayList<PerformanceRecord> recordsToSort =
-                            new ArrayList<>(studentPerformanceRecords);
-                    benchmarkAlgorithm.sort(recordsToSort, sortingCriterion, false);
-                    leaderboardText.append(String.format("%-12s %12d %12d %10.3f%n",
-                            benchmarkAlgorithm.getName(),
-                            benchmarkAlgorithm.getComparisons(),
-                            benchmarkAlgorithm.getSwaps(),
-                            benchmarkAlgorithm.getExecutionTime() / 1_000_000.0));
-                }
-            }
-        }
-
-        int rank = 1;
-        for (PerformanceRecord studentRecord : studentPerformanceRecords) {
-            leaderboardText.append(rank++)
-                    .append(". @").append(studentRecord.getUsername())
-                    .append(" - ").append(studentRecord.getTotalXp()).append(" XP")
-                    .append(" | Quizzes: ").append(studentRecord.getQuizScore())
-                    .append("\n");
-        }
-        if (leaderboardText.length() == 0) {
-            leaderboardText.append("No students in this section yet.");
         }
         leaderboardArea.setText(leaderboardText.toString());
         leaderboardArea.setCaretPosition(0);
