@@ -1,9 +1,7 @@
 package App.controller;
 
-import App.model.CourseCatalog;
 import App.model.QuizQuestionBank;
 import App.model.UserSession;
-import App.util.InvalidMenuChoiceException;
 import App.ui.ClassroomPanel;
 import App.ui.CoursePanel;
 import App.ui.DashboardPanel;
@@ -12,9 +10,10 @@ import App.ui.QuizPlayPanel;
 import App.ui.SidebarNav;
 import App.ui.TeacherDashboardPanel;
 import App.ui.Theme;
+import App.util.InvalidMenuChoiceException;
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
 
 public class ApplicationController extends JFrame {
     private CardLayout rootLayout = new CardLayout();

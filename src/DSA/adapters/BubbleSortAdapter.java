@@ -1,6 +1,5 @@
 package DSA.adapters;
 
-import DSA.SortingAlgorithm;
 import DSA.algorithms.BubbleSort;
 import DSA.model.PerformanceRecord;
 import java.util.ArrayList;
