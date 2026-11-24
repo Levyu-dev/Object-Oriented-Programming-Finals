@@ -10,16 +10,16 @@ public class DashboardPanel extends BaseScreen {
     private JLabel welcomeLabel;
     private JLabel xpLabel;
     private JProgressBar xpBar;
-    private JLabel contTitle;
+    private JLabel continueTitleLabel;
     private JProgressBar continueProgress;
-    private JButton resumeBtn;
+    private JButton continueCourseButton;
     private JPanel continuePanel;
 
     public DashboardPanel(ApplicationController controller) {
         super(controller);
         setLayout(new BorderLayout(10, 10));
         setBackground(Theme.PALE_LIME);
-        setBorder(new EmptyBorder(14, 16, 14, 16));
+        setBorder(new EmptyBorder(12, 12, 12, 12));
 
         JPanel topBox = new JPanel();
         topBox.setLayout(new BoxLayout(topBox, BoxLayout.Y_AXIS));
@@ -32,7 +32,7 @@ public class DashboardPanel extends BaseScreen {
 
         JPanel xpPanel = Theme.createRoundedCard(Theme.DEEP_TEAL, 12);
         xpPanel.setLayout(new BorderLayout(6, 6));
-        xpPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        xpPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         xpLabel = new JLabel("Level 1 - 0 XP");
         xpLabel.setForeground(Theme.BRIGHT_LIME);
@@ -46,24 +46,24 @@ public class DashboardPanel extends BaseScreen {
         continuePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         continuePanel.setVisible(false);
 
-        contTitle = new JLabel("Continue OOP Basics Roadmap");
-        contTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 13));
-        contTitle.setForeground(Theme.TEXT_DARK);
+        continueTitleLabel = new JLabel("Continue OOP Basics Roadmap");
+        continueTitleLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 13));
+        continueTitleLabel.setForeground(Theme.TEXT_DARK);
 
         continueProgress = Theme.createProgressBar(
                 0, 10, Theme.DEEP_TEAL, Theme.WHITE);
 
-        resumeBtn = Theme.createPrimaryButton("Continue Course");
-        resumeBtn.setPreferredSize(new Dimension(0, 34));
-        resumeBtn.addActionListener(e -> {
-            UserSession session = controller.getSession();
-            String courseName = session.getDashboardCourse();
+        continueCourseButton = Theme.createPrimaryButton("Continue Course");
+        continueCourseButton.setPreferredSize(new Dimension(0, 34));
+        continueCourseButton.addActionListener(event -> {
+            UserSession userSession = controller.getSession();
+            String courseName = userSession.getDashboardCourse();
             if (courseName != null) controller.showStudentScreen("COURSES");
         });
 
-        continuePanel.add(contTitle, BorderLayout.NORTH);
+        continuePanel.add(continueTitleLabel, BorderLayout.NORTH);
         continuePanel.add(continueProgress, BorderLayout.CENTER);
-        continuePanel.add(resumeBtn, BorderLayout.SOUTH);
+        continuePanel.add(continueCourseButton, BorderLayout.SOUTH);
 
         topBox.add(welcomeLabel);
         topBox.add(Box.createVerticalStrut(10));
@@ -71,61 +71,72 @@ public class DashboardPanel extends BaseScreen {
         topBox.add(Box.createVerticalStrut(10));
         topBox.add(continuePanel);
 
-        JPanel quickGrid = new JPanel(new GridLayout(1, 4, 10, 0));
-        quickGrid.setBackground(Theme.PALE_LIME);
-        quickGrid.setPreferredSize(new Dimension(0, 135));
+        JPanel activityButtonGrid = new JPanel(new GridLayout(1, 4, 6, 0));
+        activityButtonGrid.setBackground(Theme.PALE_LIME);
+        activityButtonGrid.setPreferredSize(new Dimension(0, 135));
+        activityButtonGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 135));
 
-        JButton b1 = Theme.createPrimaryButton("<html><center><b>Practice</b><br><small>Own pace</small></center></html>");
-        b1.addActionListener(e -> controller.showStudentScreen("PRACTICE"));
+        JButton practiceButton = Theme.createPrimaryButton("<html><center><b>Practice</b><br><small>Own pace</small></center></html>");
+        practiceButton.addActionListener(event -> controller.showStudentScreen("PRACTICE"));
 
-        JButton b2 = Theme.createPrimaryButton("<html><center><b>Timed Quiz</b><br><small>Beat clock</small></center></html>");
-        b2.addActionListener(e -> controller.launchTimedQuiz(5));
+        JButton timedQuizButton = Theme.createPrimaryButton("<html><center><b>Timed Quiz</b><br><small>Beat clock</small></center></html>");
+        timedQuizButton.addActionListener(event -> controller.launchTimedQuiz(5));
 
-        JButton b3 = Theme.createPrimaryButton("<html><center><b>Final Boss</b><br><small>Big test</small></center></html>");
-        b3.addActionListener(e -> controller.launchFinalBossQuiz(10));
+        JButton finalBossButton = Theme.createPrimaryButton("<html><center><b>Final Boss</b><br><small>Big test</small></center></html>");
+        finalBossButton.addActionListener(event -> controller.launchFinalBossQuiz(10));
 
-        JButton b4 = Theme.createPrimaryButton("<html><center><b>Party Mode</b><br><small>With friends</small></center></html>");
-        b4.addActionListener(e -> controller.launchPartyQuiz(5));
+        JButton partyModeButton = Theme.createPrimaryButton("<html><center><b>Party Mode</b><br><small>With friends</small></center></html>");
+        partyModeButton.addActionListener(event -> controller.launchPartyQuiz(5));
 
-        quickGrid.add(b1);
-        quickGrid.add(b2);
-        quickGrid.add(b3);
-        quickGrid.add(b4);
+        activityButtonGrid.add(practiceButton);
+        activityButtonGrid.add(timedQuizButton);
+        activityButtonGrid.add(finalBossButton);
+        activityButtonGrid.add(partyModeButton);
 
-        JPanel quickArea = new JPanel(new BorderLayout(0, 8));
-        quickArea.setBackground(Theme.PALE_LIME);
-        quickArea.add(quickGrid, BorderLayout.NORTH);
-        quickArea.addComponentListener(new java.awt.event.ComponentAdapter() {
+        JButton studyBuddyButton = Theme.createWhiteButton("<html><center><b>StudyBuddy:</b> Every bug you fix makes you better!</center></html>");
+        studyBuddyButton.setPreferredSize(new Dimension(0, 46));
+        studyBuddyButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
+        studyBuddyButton.addActionListener(event -> controller.showAlert("StudyBuddy Tip: Keep fields private and use getters/setters!"));
+
+        JPanel studyBuddyPanel = new JPanel(new BorderLayout());
+        studyBuddyPanel.setBackground(Theme.PALE_LIME);
+        studyBuddyPanel.setBorder(new EmptyBorder(0, 12, 0, 12));
+        studyBuddyPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
+        studyBuddyPanel.add(studyBuddyButton, BorderLayout.CENTER);
+
+        JPanel activityArea = new JPanel();
+        activityArea.setLayout(new BoxLayout(activityArea, BoxLayout.Y_AXIS));
+        activityArea.setBackground(Theme.PALE_LIME);
+        activityArea.add(activityButtonGrid);
+        activityArea.add(Box.createVerticalStrut(6));
+        activityArea.add(studyBuddyPanel);
+        activityArea.addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentResized(java.awt.event.ComponentEvent event) {
-                int width = quickArea.getWidth();
-                int availableHeight = quickArea.getHeight() - 8;
+                int width = activityArea.getWidth();
+                int availableHeight = activityArea.getHeight() - studyBuddyButton.getPreferredSize().height - 6;
                 if (width <= 0 || availableHeight <= 0) return;
                 int height = Math.min(180, Math.min(
                         (int) Math.round(width * 0.45), availableHeight));
-                if (quickGrid.getPreferredSize().height != height) {
-                    quickGrid.setPreferredSize(new Dimension(0, height));
-                    quickArea.revalidate();
+                if (activityButtonGrid.getPreferredSize().height != height) {
+                    activityButtonGrid.setPreferredSize(new Dimension(0, height));
+                    activityButtonGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
+                    activityArea.revalidate();
                 }
             }
         });
 
-        JButton buddyBtn = Theme.createWhiteButton("<html><center><b>StudyBuddy:</b> Every bug you fix makes you better!</center></html>");
-        buddyBtn.setPreferredSize(new Dimension(0, 46));
-        buddyBtn.addActionListener(e -> controller.showAlert("StudyBuddy Tip: Keep fields private and use getters/setters!"));
-
         add(topBox, BorderLayout.NORTH);
-        add(quickArea, BorderLayout.CENTER);
-        add(buddyBtn, BorderLayout.SOUTH);
+        add(activityArea, BorderLayout.CENTER);
     }
 
     @Override
     public void refresh() {
-        UserSession.StudentRecord s = controller.getSession().getCurrentStudent();
-        int level = (s.getXp() / 250) + 1;
-        welcomeLabel.setText("Hi, @" + s.getName() + " (" + s.getSection() + ")");
-        xpLabel.setText("Level " + level + " - " + s.getXp() + " XP");
-        xpBar.setValue(Math.min(2000, s.getXp()));
+        UserSession.StudentRecord studentRecord = controller.getSession().getCurrentStudent();
+        int level = (studentRecord.getXp() / 250) + 1;
+        welcomeLabel.setText("Hi, @" + studentRecord.getName() + " (" + studentRecord.getSection() + ")");
+        xpLabel.setText("Level " + level + " - " + studentRecord.getXp() + " XP");
+        xpBar.setValue(Math.min(2000, studentRecord.getXp()));
 
         UserSession session = controller.getSession();
         String courseName = session.getDashboardCourse();
@@ -140,15 +151,16 @@ public class DashboardPanel extends BaseScreen {
         int total = session.getCourseCatalog().getLessonCount(courseName);
 
         continuePanel.setVisible(true);
+        continuePanel.getParent().revalidate();
 
         if (completed >= total) {
-            contTitle.setText("Roadmap Complete: " + courseName + " (" + completed + "/" + total + " lessons)");
-            resumeBtn.setText("VIEW ROADMAP");
-            resumeBtn.setEnabled(true);
+            continueTitleLabel.setText("Roadmap Complete: " + courseName + " (" + completed + "/" + total + " lessons)");
+            continueCourseButton.setText("VIEW ROADMAP");
+            continueCourseButton.setEnabled(true);
         } else {
-            contTitle.setText("Continue: " + courseName + " (" + completed + "/" + total + " lessons)");
-            resumeBtn.setText("CONTINUE ROADMAP");
-            resumeBtn.setEnabled(true);
+            continueTitleLabel.setText("Continue: " + courseName + " (" + completed + "/" + total + " lessons)");
+            continueCourseButton.setText("CONTINUE ROADMAP");
+            continueCourseButton.setEnabled(true);
         }
         continueProgress.setMaximum(total);
         continueProgress.setValue(completed);

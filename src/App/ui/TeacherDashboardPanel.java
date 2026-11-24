@@ -66,48 +66,53 @@ public class TeacherDashboardPanel extends BaseScreen {
         gradebookPanel.add(tableTitle, BorderLayout.NORTH);
         gradebookPanel.add(new JScrollPane(studentTable), BorderLayout.CENTER);
 
-        JButton manageBtn = Theme.createPrimaryButton("Create Quiz for Students ->");
-        manageBtn.setPreferredSize(new Dimension(0, 42));
-        manageBtn.addActionListener(e -> controller.showTeacherScreen("TEACHER_CLASS"));
+        JButton manageClassButton = Theme.createPrimaryButton("Create Quiz for Students ->");
+        manageClassButton.setPreferredSize(new Dimension(0, 42));
+        manageClassButton.addActionListener(
+                event -> controller.showTeacherScreen("TEACHER_CLASS"));
 
         add(topBox, BorderLayout.NORTH);
         add(gradebookPanel, BorderLayout.CENTER);
-        add(manageBtn, BorderLayout.SOUTH);
+        add(manageClassButton, BorderLayout.SOUTH);
     }
 
     @Override
     public void refresh() {
         UserSession session = controller.getSession();
-        String sec = session.getCurrentSection();
-        welcomeLabel.setText("Prof. " + session.getCurrentUserName() + " (" + sec + ")");
+        String sectionName = session.getCurrentSection();
+        welcomeLabel.setText("Prof. " + session.getCurrentUserName() + " (" + sectionName + ")");
 
-        List<UserSession.StudentRecord> students = session.getStudentsInSection(sec);
+        List<UserSession.StudentRecord> students = session.getStudentsInSection(sectionName);
         studentCountLabel.setText(students.size() + " Students");
 
         tableModel.setRowCount(0);
-        for (UserSession.StudentRecord s : students) {
-            int lvl = (s.getXp() / 250) + 1;
-            tableModel.addRow(new Object[]{"@" + s.getName(), "L" + lvl, s.getXp(), s.getCompletedQuizzes()});
+        for (UserSession.StudentRecord student : students) {
+            int level = (student.getXp() / 250) + 1;
+            tableModel.addRow(new Object[]{
+                    "@" + student.getName(),
+                    "L" + level,
+                    student.getXp(),
+                    student.getCompletedQuizzes()});
         }
     }
 
-    private JPanel createStatBox(String big, String small) {
-        JPanel box = Theme.createRoundedCard(Theme.DEEP_TEAL, 12);
-        box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
+    private JPanel createStatBox(String primaryText, String secondaryText) {
+        JPanel statCard = Theme.createRoundedCard(Theme.DEEP_TEAL, 12);
+        statCard.setLayout(new BoxLayout(statCard, BoxLayout.Y_AXIS));
 
-        JLabel l1 = new JLabel(big);
-        l1.setFont(new Font(Theme.UI_FONT, Font.BOLD, 16));
-        l1.setForeground(Theme.WHITE);
-        l1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel primaryLabel = new JLabel(primaryText);
+        primaryLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 16));
+        primaryLabel.setForeground(Theme.WHITE);
+        primaryLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel l2 = new JLabel(small);
-        l2.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 11));
-        l2.setForeground(Theme.WHITE);
-        l2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel secondaryLabel = new JLabel(secondaryText);
+        secondaryLabel.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 11));
+        secondaryLabel.setForeground(Theme.WHITE);
+        secondaryLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        box.add(l1);
-        box.add(l2);
-        return box;
+        statCard.add(primaryLabel);
+        statCard.add(secondaryLabel);
+        return statCard;
     }
 }
 

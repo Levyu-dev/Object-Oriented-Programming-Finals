@@ -7,49 +7,53 @@ import java.awt.*;
 
 public class SidebarNav extends JPanel {
 
-    public SidebarNav(ApplicationController controller, boolean isTeacher) {
+    public SidebarNav(ApplicationController controller, boolean teacherMode) {
         setBackground(Theme.SOFT_LIME_CARD);
         setPreferredSize(new Dimension(62, 0));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(new EmptyBorder(20, 8, 20, 8));
 
-        if (isTeacher) {
-            JButton dashBtn = Theme.createCircleButton("Dash", "Teacher Dashboard");
-            dashBtn.addActionListener(e -> controller.showTeacherScreen("TEACHER_DASH"));
+        if (teacherMode) {
+            JButton teacherDashboardButton = Theme.createCircleButton("Dash", "Teacher Dashboard");
+            teacherDashboardButton.addActionListener(
+                    event -> controller.showTeacherScreen("TEACHER_DASH"));
 
-            JButton assignBtn = Theme.createCircleButton("Assign", "Manage Assignments");
-            assignBtn.addActionListener(e -> controller.showTeacherScreen("TEACHER_CLASS"));
+            JButton assignmentsButton = Theme.createCircleButton("Assign", "Manage Assignments");
+            assignmentsButton.addActionListener(
+                    event -> controller.showTeacherScreen("TEACHER_CLASS"));
 
-            add(dashBtn);
+            add(teacherDashboardButton);
             add(Box.createVerticalStrut(16));
-            add(assignBtn);
+            add(assignmentsButton);
         } else {
-            JButton homeBtn = Theme.createCircleButton("Home", "Student Dashboard");
-            homeBtn.addActionListener(e -> controller.showStudentScreen("STUDENT_DASH"));
+            JButton studentHomeButton = Theme.createCircleButton("Home", "Student Dashboard");
+            studentHomeButton.addActionListener(
+                    event -> controller.showStudentScreen("STUDENT_DASH"));
 
-            JButton practiceBtn = Theme.createCircleButton("Prac", "Practice");
-            practiceBtn.addActionListener(e -> controller.showStudentScreen("PRACTICE"));
+            JButton practiceButton = Theme.createCircleButton("Prac", "Practice");
+            practiceButton.addActionListener(event -> controller.showStudentScreen("PRACTICE"));
 
-            JButton coursesBtn = Theme.createCircleButton("Course", "Browse courses");
-            coursesBtn.addActionListener(e -> controller.showStudentScreen("COURSES"));
+            JButton coursesButton = Theme.createCircleButton("Course", "Browse courses");
+            coursesButton.addActionListener(event -> controller.showStudentScreen("COURSES"));
 
-            JButton classBtn = Theme.createCircleButton("Class", "My Classroom");
-            classBtn.addActionListener(e -> controller.showStudentScreen("STUDENT_CLASS"));
+            JButton classroomButton = Theme.createCircleButton("Class", "My Classroom");
+            classroomButton.addActionListener(
+                    event -> controller.showStudentScreen("STUDENT_CLASS"));
 
-            add(homeBtn);
+            add(studentHomeButton);
             add(Box.createVerticalStrut(16));
-            add(practiceBtn);
+            add(practiceButton);
             add(Box.createVerticalStrut(16));
-            add(coursesBtn);
+            add(coursesButton);
             add(Box.createVerticalStrut(16));
-            add(classBtn);
+            add(classroomButton);
         }
 
-        JButton logoutBtn = Theme.createCircleButton("Sign Out", "Sign out of the current session");
-        logoutBtn.addActionListener(e -> controller.logout());
+        JButton signOutButton = Theme.createCircleButton("Sign Out", "Sign out of the current session");
+        signOutButton.addActionListener(event -> controller.logout());
 
         add(Box.createVerticalGlue());
-        add(logoutBtn);
+        add(signOutButton);
     }
 }
 

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClassroomPanel extends BaseScreen {
-    private final boolean isTeacher;
+    private final boolean teacherMode;
     private JLabel titleLabel;
     private JList<String> assignmentList;
     private JTextArea leaderboardArea;
@@ -27,9 +27,9 @@ public class ClassroomPanel extends BaseScreen {
     private JList<String> draftQuestionList;
     private final List<UserSession.TeacherQuestion> draftQuestions = new ArrayList<>();
 
-    public ClassroomPanel(ApplicationController controller, boolean isTeacher) {
+    public ClassroomPanel(ApplicationController controller, boolean teacherMode) {
         super(controller);
-        this.isTeacher = isTeacher;
+        this.teacherMode = teacherMode;
 
         setLayout(new BorderLayout(10, 10));
         setBackground(Theme.PALE_LIME);
@@ -39,17 +39,16 @@ public class ClassroomPanel extends BaseScreen {
         titleLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 18));
         titleLabel.setForeground(Theme.TEXT_DARK);
 
-        JPanel stack = new JPanel(new GridLayout(2, 1, 0, 12));
-        stack.setBackground(Theme.PALE_LIME);
+        JPanel classroomSections = new JPanel(new GridLayout(2, 1, 0, 12));
+        classroomSections.setBackground(Theme.PALE_LIME);
 
-        // Top Card: Section Activities
-        JPanel topCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
-        topCard.setLayout(new BorderLayout(6, 6));
+        JPanel activitiesCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
+        activitiesCard.setLayout(new BorderLayout(6, 6));
 
-        JLabel actHeader = new JLabel("Section Activities");
-        actHeader.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
-        actHeader.setForeground(Theme.TEXT_DARK);
-        topCard.add(actHeader, BorderLayout.NORTH);
+        JLabel activitiesTitleLabel = new JLabel("Section Activities");
+        activitiesTitleLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
+        activitiesTitleLabel.setForeground(Theme.TEXT_DARK);
+        activitiesCard.add(activitiesTitleLabel, BorderLayout.NORTH);
 
         assignmentList = new JList<>();
         assignmentList.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 13));
@@ -61,55 +60,55 @@ public class ClassroomPanel extends BaseScreen {
 
         JScrollPane listScroll = new JScrollPane(assignmentList);
         listScroll.setBorder(BorderFactory.createLineBorder(new Color(0, 84, 95, 60)));
-        topCard.add(listScroll, BorderLayout.CENTER);
+        activitiesCard.add(listScroll, BorderLayout.CENTER);
 
-        if (isTeacher) {
+        if (teacherMode) {
             JButton deleteActivityButton = Theme.createWhiteButton("DELETE SELECTED ACTIVITY");
             deleteActivityButton.setPreferredSize(new Dimension(0, 34));
-            deleteActivityButton.addActionListener(e -> deleteSelectedActivity());
-            topCard.add(deleteActivityButton, BorderLayout.SOUTH);
+            deleteActivityButton.addActionListener(event -> deleteSelectedActivity());
+            activitiesCard.add(deleteActivityButton, BorderLayout.SOUTH);
         } else {
-            JButton startBtn = Theme.createPrimaryButton("Start Selected Activity");
-            startBtn.setPreferredSize(new Dimension(0, 38));
-            startBtn.addActionListener(e -> {
-                String selected = assignmentList.getSelectedValue();
-                if (selected == null) {
+            JButton startActivityButton = Theme.createPrimaryButton("Start Selected Activity");
+            startActivityButton.setPreferredSize(new Dimension(0, 38));
+            startActivityButton.addActionListener(event -> {
+                String selectedAssignmentLabel = assignmentList.getSelectedValue();
+                if (selectedAssignmentLabel == null) {
                     controller.showError("Tap an activity from the list first.");
                 } else {
-                    UserSession session = controller.getSession();
-                    UserSession.TeacherQuiz quiz = session.getTeacherQuiz(session.getCurrentSection(), selected);
-                    if (quiz != null) {
-                        controller.launchTeacherQuiz(quiz);
+                    UserSession userSession = controller.getSession();
+                    UserSession.TeacherQuiz teacherQuiz = userSession.getTeacherQuiz(
+                            userSession.getCurrentSection(), selectedAssignmentLabel);
+                    if (teacherQuiz != null) {
+                        controller.launchTeacherQuiz(teacherQuiz);
                     } else {
                         controller.showError("This activity has no published quiz.");
                     }
                 }
             });
-            topCard.add(startBtn, BorderLayout.SOUTH);
+            activitiesCard.add(startActivityButton, BorderLayout.SOUTH);
         }
 
-        // Bottom Card: Teacher Assignment Form OR Student Leaderboard
-        JPanel bottomCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
-        bottomCard.setLayout(new BorderLayout(6, 6));
+        JPanel classToolsCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
+        classToolsCard.setLayout(new BorderLayout(6, 6));
 
-        if (isTeacher) {
-            JLabel formTitle = new JLabel("Create Quiz for Students");
-            formTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
-            formTitle.setForeground(Theme.TEXT_DARK);
-            bottomCard.add(formTitle, BorderLayout.NORTH);
+        if (teacherMode) {
+            JLabel quizBuilderTitleLabel = new JLabel("Create Quiz for Students");
+            quizBuilderTitleLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
+            quizBuilderTitleLabel.setForeground(Theme.TEXT_DARK);
+            classToolsCard.add(quizBuilderTitleLabel, BorderLayout.NORTH);
 
-            JPanel builder = new JPanel(new BorderLayout(6, 6));
-            builder.setOpaque(false);
+            JPanel quizBuilderPanel = new JPanel(new BorderLayout(6, 6));
+            quizBuilderPanel.setOpaque(false);
 
-            JPanel titlePanel = new JPanel(new BorderLayout(4, 4));
-            titlePanel.setOpaque(false);
-            JLabel titlePrompt = new JLabel("Quiz title:");
-            titlePrompt.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
-            titlePrompt.setForeground(Theme.TEXT_DARK);
+            JPanel quizTitlePanel = new JPanel(new BorderLayout(4, 4));
+            quizTitlePanel.setOpaque(false);
+            JLabel quizTitleLabel = new JLabel("Quiz title:");
+            quizTitleLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
+            quizTitleLabel.setForeground(Theme.TEXT_DARK);
             quizTitleField = new JTextField();
             Theme.styleTextField(quizTitleField);
-            titlePanel.add(titlePrompt, BorderLayout.NORTH);
-            titlePanel.add(quizTitleField, BorderLayout.CENTER);
+            quizTitlePanel.add(quizTitleLabel, BorderLayout.NORTH);
+            quizTitlePanel.add(quizTitleField, BorderLayout.CENTER);
 
             draftQuestionModel = new DefaultListModel<>();
             draftQuestionList = new JList<>(draftQuestionModel);
@@ -117,46 +116,46 @@ public class ClassroomPanel extends BaseScreen {
             draftQuestionList.setForeground(Theme.TEXT_DARK);
             draftQuestionList.setBackground(Theme.INPUT_BACKGROUND);
             draftQuestionList.setSelectionBackground(Theme.BRIGHT_LIME);
-            JScrollPane draftScroll = new JScrollPane(draftQuestionList);
-            draftScroll.setBorder(BorderFactory.createLineBorder(Theme.INPUT_BORDER));
+            JScrollPane draftQuestionScrollPane = new JScrollPane(draftQuestionList);
+            draftQuestionScrollPane.setBorder(BorderFactory.createLineBorder(Theme.INPUT_BORDER));
 
             JButton addQuestionButton = Theme.createWhiteButton("ADD QUESTION");
-            addQuestionButton.addActionListener(e -> addDraftQuestion());
+            addQuestionButton.addActionListener(event -> addDraftQuestion());
             JButton deleteQuestionButton = Theme.createWhiteButton("DELETE QUESTION");
-            deleteQuestionButton.addActionListener(e -> deleteDraftQuestion());
+            deleteQuestionButton.addActionListener(event -> deleteDraftQuestion());
             JButton publishButton = Theme.createPrimaryButton("PUBLISH QUIZ");
-            publishButton.addActionListener(e -> publishQuiz());
+            publishButton.addActionListener(event -> publishQuiz());
 
-            JPanel buttons = new JPanel(new GridLayout(1, 3, 6, 0));
-            buttons.setOpaque(false);
-            buttons.add(addQuestionButton);
-            buttons.add(deleteQuestionButton);
-            buttons.add(publishButton);
+            JPanel quizActionButtons = new JPanel(new GridLayout(1, 3, 6, 0));
+            quizActionButtons.setOpaque(false);
+            quizActionButtons.add(addQuestionButton);
+            quizActionButtons.add(deleteQuestionButton);
+            quizActionButtons.add(publishButton);
 
-            builder.add(titlePanel, BorderLayout.NORTH);
-            builder.add(draftScroll, BorderLayout.CENTER);
-            builder.add(buttons, BorderLayout.SOUTH);
-            bottomCard.add(builder, BorderLayout.CENTER);
+            quizBuilderPanel.add(quizTitlePanel, BorderLayout.NORTH);
+            quizBuilderPanel.add(draftQuestionScrollPane, BorderLayout.CENTER);
+            quizBuilderPanel.add(quizActionButtons, BorderLayout.SOUTH);
+            classToolsCard.add(quizBuilderPanel, BorderLayout.CENTER);
         } else {
             JPanel leaderboardHeader = new JPanel(new BorderLayout(8, 4));
             leaderboardHeader.setOpaque(false);
 
-            JLabel boardTitle = new JLabel("Section Leaderboard");
-            boardTitle.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
-            boardTitle.setForeground(Theme.TEXT_DARK);
+            JLabel leaderboardTitleLabel = new JLabel("Section Leaderboard");
+            leaderboardTitleLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 14));
+            leaderboardTitleLabel.setForeground(Theme.TEXT_DARK);
 
             leaderboardSortBox = new JComboBox<>(new String[]{"XP", "Completed Quizzes"});
             Theme.styleComboBox(leaderboardSortBox);
-            leaderboardSortBox.addActionListener(e -> refreshLeaderboard());
+            leaderboardSortBox.addActionListener(event -> refreshLeaderboard());
 
             leaderboardAlgorithmBox = new JComboBox<>(new String[]{
                     "Merge Sort", "Bubble Sort", "Quick Sort"});
             Theme.styleComboBox(leaderboardAlgorithmBox);
-            leaderboardAlgorithmBox.addActionListener(e -> refreshLeaderboard());
+            leaderboardAlgorithmBox.addActionListener(event -> refreshLeaderboard());
 
             leaderboardMetricsButton = Theme.createWhiteButton("Show DSA Metrics");
             leaderboardMetricsButton.setPreferredSize(new Dimension(150, 32));
-            leaderboardMetricsButton.addActionListener(e -> {
+            leaderboardMetricsButton.addActionListener(event -> {
                 showLeaderboardMetrics = !showLeaderboardMetrics;
                 leaderboardMetricsButton.setText(showLeaderboardMetrics
                         ? "Hide DSA Metrics" : "Show DSA Metrics");
@@ -165,17 +164,17 @@ public class ClassroomPanel extends BaseScreen {
 
             JPanel algorithmControls = new JPanel(new BorderLayout(6, 0));
             algorithmControls.setOpaque(false);
-            JLabel algorithmLabel = new JLabel("Algorithm:");
-            algorithmLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
-            algorithmLabel.setForeground(Theme.TEXT_DARK);
-            algorithmControls.add(algorithmLabel, BorderLayout.WEST);
+            JLabel algorithmNameLabel = new JLabel("Algorithm:");
+            algorithmNameLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
+            algorithmNameLabel.setForeground(Theme.TEXT_DARK);
+            algorithmControls.add(algorithmNameLabel, BorderLayout.WEST);
             algorithmControls.add(leaderboardAlgorithmBox, BorderLayout.CENTER);
             algorithmControls.add(leaderboardMetricsButton, BorderLayout.EAST);
 
-            leaderboardHeader.add(boardTitle, BorderLayout.WEST);
+            leaderboardHeader.add(leaderboardTitleLabel, BorderLayout.WEST);
             leaderboardHeader.add(leaderboardSortBox, BorderLayout.EAST);
-            bottomCard.add(leaderboardHeader, BorderLayout.NORTH);
-            bottomCard.add(algorithmControls, BorderLayout.SOUTH);
+            classToolsCard.add(leaderboardHeader, BorderLayout.NORTH);
+            classToolsCard.add(algorithmControls, BorderLayout.SOUTH);
 
             leaderboardArea = new JTextArea();
             leaderboardArea.setEditable(false);
@@ -187,13 +186,13 @@ public class ClassroomPanel extends BaseScreen {
 
             JScrollPane boardScroll = new JScrollPane(leaderboardArea);
             boardScroll.setBorder(BorderFactory.createLineBorder(Theme.INPUT_BORDER));
-            bottomCard.add(boardScroll, BorderLayout.CENTER);
+            classToolsCard.add(boardScroll, BorderLayout.CENTER);
         }
 
-        stack.add(topCard);
-        stack.add(bottomCard);
+        classroomSections.add(activitiesCard);
+        classroomSections.add(classToolsCard);
         add(titleLabel, BorderLayout.NORTH);
-        add(stack, BorderLayout.CENTER);
+        add(classroomSections, BorderLayout.CENTER);
     }
 
     private void addDraftQuestion() {
@@ -207,11 +206,14 @@ public class ClassroomPanel extends BaseScreen {
     }
 
     private String formatDraftQuestion(int number, UserSession.TeacherQuestion question) {
-        String type = question.getType() == UserSession.QuestionType.MULTIPLE_CHOICE
+        String questionTypeName = question.getType() == UserSession.QuestionType.MULTIPLE_CHOICE
                 ? "Multiple choice" : "Short answer";
-        String prompt = question.getPrompt();
-        if (prompt.length() > 32) prompt = prompt.substring(0, 29) + "...";
-        return number + ". " + type + " - " + prompt + " (" + question.getPoints() + " pts)";
+        String questionPrompt = question.getPrompt();
+        if (questionPrompt.length() > 32) {
+            questionPrompt = questionPrompt.substring(0, 29) + "...";
+        }
+        return number + ". " + questionTypeName + " - " + questionPrompt
+                + " (" + question.getPoints() + " pts)";
     }
 
     private void deleteDraftQuestion() {
@@ -221,35 +223,38 @@ public class ClassroomPanel extends BaseScreen {
             return;
         }
 
-        int result = JOptionPane.showConfirmDialog(
+        int confirmationResult = JOptionPane.showConfirmDialog(
                 this, "Delete the selected draft question?", "Delete Question",
                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (result != JOptionPane.YES_OPTION) return;
+        if (confirmationResult != JOptionPane.YES_OPTION) return;
 
         draftQuestions.remove(selectedIndex);
         draftQuestionModel.remove(selectedIndex);
-        for (int i = 0; i < draftQuestions.size(); i++) {
-            draftQuestionModel.set(i, formatDraftQuestion(i + 1, draftQuestions.get(i)));
+        for (int questionIndex = 0; questionIndex < draftQuestions.size(); questionIndex++) {
+            draftQuestionModel.set(
+                    questionIndex,
+                    formatDraftQuestion(questionIndex + 1, draftQuestions.get(questionIndex)));
         }
     }
 
     private void deleteSelectedActivity() {
-        String selected = assignmentList.getSelectedValue();
-        if (selected == null) {
+        String selectedAssignmentLabel = assignmentList.getSelectedValue();
+        if (selectedAssignmentLabel == null) {
             controller.showError("Select an activity to delete.");
             return;
         }
 
-        int result = JOptionPane.showConfirmDialog(
+        int confirmationResult = JOptionPane.showConfirmDialog(
                 this,
-                "Delete \"" + selected + "\" and all of its questions?",
+                "Delete \"" + selectedAssignmentLabel + "\" and all of its questions?",
                 "Delete Activity",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
-        if (result != JOptionPane.YES_OPTION) return;
+        if (confirmationResult != JOptionPane.YES_OPTION) return;
 
-        UserSession session = controller.getSession();
-        if (!session.deleteTeacherQuiz(session.getCurrentSection(), selected)) {
+        UserSession userSession = controller.getSession();
+        if (!userSession.deleteTeacherQuiz(
+                userSession.getCurrentSection(), selectedAssignmentLabel)) {
             controller.showError("The selected activity could not be found.");
             return;
         }
@@ -257,70 +262,71 @@ public class ClassroomPanel extends BaseScreen {
     }
 
     private UserSession.TeacherQuestion showAddQuestionDialog() {
-        JComboBox<String> typeBox = new JComboBox<>(new String[]{"Short Answer", "Multiple Choice"});
+        JComboBox<String> questionTypeSelector =
+                new JComboBox<>(new String[]{"Short Answer", "Multiple Choice"});
 
-        JTextArea promptField = new JTextArea(3, 24);
-        promptField.setLineWrap(true);
-        promptField.setWrapStyleWord(true);
-        promptField.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 14));
-        promptField.setForeground(Theme.TEXT_DARK);
-        promptField.setBackground(Theme.INPUT_BACKGROUND);
-        promptField.setBorder(BorderFactory.createCompoundBorder(
+        JTextArea questionPromptArea = new JTextArea(3, 24);
+        questionPromptArea.setLineWrap(true);
+        questionPromptArea.setWrapStyleWord(true);
+        questionPromptArea.setFont(new Font(Theme.UI_FONT, Font.PLAIN, 14));
+        questionPromptArea.setForeground(Theme.TEXT_DARK);
+        questionPromptArea.setBackground(Theme.INPUT_BACKGROUND);
+        questionPromptArea.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Theme.INPUT_BORDER),
                 new EmptyBorder(6, 8, 6, 8)));
 
         JTextField pointsField = new JTextField("50");
         Theme.styleTextField(pointsField);
-        JTextField shortAnswerField = new JTextField();
-        Theme.styleTextField(shortAnswerField);
+        JTextField correctAnswerField = new JTextField();
+        Theme.styleTextField(correctAnswerField);
 
         JPanel shortAnswerPanel = new JPanel(new BorderLayout(4, 4));
         shortAnswerPanel.setOpaque(false);
         shortAnswerPanel.add(new JLabel("Correct answer:"), BorderLayout.NORTH);
-        shortAnswerPanel.add(shortAnswerField, BorderLayout.CENTER);
+        shortAnswerPanel.add(correctAnswerField, BorderLayout.CENTER);
 
-        JTextField[] optionFields = new JTextField[4];
-        JPanel multipleChoicePanel = new JPanel(new GridLayout(5, 2, 4, 4));
-        multipleChoicePanel.setOpaque(false);
-        for (int i = 0; i < optionFields.length; i++) {
-            optionFields[i] = new JTextField();
-            Theme.styleTextField(optionFields[i]);
-            multipleChoicePanel.add(new JLabel("Option " + (char) ('A' + i) + ":"));
-            multipleChoicePanel.add(optionFields[i]);
+        JTextField[] answerOptionFields = new JTextField[4];
+        JPanel answerOptionsPanel = new JPanel(new GridLayout(5, 2, 4, 4));
+        answerOptionsPanel.setOpaque(false);
+        for (int optionIndex = 0; optionIndex < answerOptionFields.length; optionIndex++) {
+            answerOptionFields[optionIndex] = new JTextField();
+            Theme.styleTextField(answerOptionFields[optionIndex]);
+            answerOptionsPanel.add(new JLabel("Option " + (char) ('A' + optionIndex) + ":"));
+            answerOptionsPanel.add(answerOptionFields[optionIndex]);
         }
-        JComboBox<String> correctChoiceBox = new JComboBox<>(new String[]{"A", "B", "C", "D"});
-        Theme.styleComboBox(correctChoiceBox);
-        multipleChoicePanel.add(new JLabel("Correct option:"));
-        multipleChoicePanel.add(correctChoiceBox);
+        JComboBox<String> correctOptionSelector = new JComboBox<>(new String[]{"A", "B", "C", "D"});
+        Theme.styleComboBox(correctOptionSelector);
+        answerOptionsPanel.add(new JLabel("Correct option:"));
+        answerOptionsPanel.add(correctOptionSelector);
 
-        CardLayout answerLayout = new CardLayout();
-        JPanel answerCards = new JPanel(answerLayout);
-        answerCards.add(shortAnswerPanel, "SHORT");
-        answerCards.add(multipleChoicePanel, "MULTIPLE");
-        typeBox.addActionListener(e -> answerLayout.show(
-                answerCards, typeBox.getSelectedIndex() == 0 ? "SHORT" : "MULTIPLE"));
+        CardLayout answerTypeLayout = new CardLayout();
+        JPanel answerTypeCards = new JPanel(answerTypeLayout);
+        answerTypeCards.add(shortAnswerPanel, "SHORT");
+        answerTypeCards.add(answerOptionsPanel, "MULTIPLE");
+        questionTypeSelector.addActionListener(event -> answerTypeLayout.show(
+                answerTypeCards, questionTypeSelector.getSelectedIndex() == 0 ? "SHORT" : "MULTIPLE"));
 
-        JPanel form = new JPanel();
-        form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
-        form.add(new JLabel("Question type:"));
-        form.add(typeBox);
-        form.add(Box.createVerticalStrut(6));
-        form.add(new JLabel("Question:"));
-        form.add(new JScrollPane(promptField));
-        form.add(Box.createVerticalStrut(6));
-        form.add(new JLabel("Points for a correct answer:"));
-        form.add(pointsField);
-        form.add(Box.createVerticalStrut(6));
-        form.add(answerCards);
+        JPanel questionForm = new JPanel();
+        questionForm.setLayout(new BoxLayout(questionForm, BoxLayout.Y_AXIS));
+        questionForm.add(new JLabel("Question type:"));
+        questionForm.add(questionTypeSelector);
+        questionForm.add(Box.createVerticalStrut(6));
+        questionForm.add(new JLabel("Question:"));
+        questionForm.add(new JScrollPane(questionPromptArea));
+        questionForm.add(Box.createVerticalStrut(6));
+        questionForm.add(new JLabel("Points for a correct answer:"));
+        questionForm.add(pointsField);
+        questionForm.add(Box.createVerticalStrut(6));
+        questionForm.add(answerTypeCards);
 
-        int result = JOptionPane.showConfirmDialog(this, form, "Add Question",
+        int dialogResult = JOptionPane.showConfirmDialog(this, questionForm, "Add Question",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (result != JOptionPane.OK_OPTION) {
+        if (dialogResult != JOptionPane.OK_OPTION) {
             return null;
         }
 
-        String prompt = promptField.getText().trim();
-        if (prompt.isEmpty()) {
+        String questionPrompt = questionPromptArea.getText().trim();
+        if (questionPrompt.isEmpty()) {
             controller.showError("Enter a question.");
             return null;
         }
@@ -332,41 +338,41 @@ public class ClassroomPanel extends BaseScreen {
                 controller.showError("Points must be at least 1.");
                 return null;
             }
-        } catch (NumberFormatException ex) {
+        } catch (NumberFormatException numberFormatException) {
             controller.showError("Enter a valid points value.");
             return null;
         }
 
-        if (typeBox.getSelectedIndex() == 0) {
-            String answer = shortAnswerField.getText().trim();
-            if (answer.isEmpty()) {
+        if (questionTypeSelector.getSelectedIndex() == 0) {
+            String correctAnswer = correctAnswerField.getText().trim();
+            if (correctAnswer.isEmpty()) {
                 controller.showError("Enter the correct answer.");
                 return null;
             }
             return new UserSession.TeacherQuestion(
-                    UserSession.QuestionType.SHORT_ANSWER, prompt, answer, null, points);
+                    UserSession.QuestionType.SHORT_ANSWER, questionPrompt, correctAnswer, null, points);
         }
 
-        String[] choices = new String[optionFields.length];
-        for (int i = 0; i < optionFields.length; i++) {
-            String option = optionFields[i].getText().trim();
-            if (option.isEmpty()) {
+        String[] answerChoices = new String[answerOptionFields.length];
+        for (int optionIndex = 0; optionIndex < answerOptionFields.length; optionIndex++) {
+            String optionText = answerOptionFields[optionIndex].getText().trim();
+            if (optionText.isEmpty()) {
                 controller.showError("Fill in all four answer options.");
                 return null;
             }
-            choices[i] = (char) ('A' + i) + ") " + option;
+            answerChoices[optionIndex] = (char) ('A' + optionIndex) + ") " + optionText;
         }
         return new UserSession.TeacherQuestion(
                 UserSession.QuestionType.MULTIPLE_CHOICE,
-                prompt,
-                (String) correctChoiceBox.getSelectedItem(),
-                choices,
+                questionPrompt,
+                (String) correctOptionSelector.getSelectedItem(),
+                answerChoices,
                 points);
     }
 
     private void publishQuiz() {
-        String title = quizTitleField.getText().trim();
-        if (title.isEmpty()) {
+        String quizTitle = quizTitleField.getText().trim();
+        if (quizTitle.isEmpty()) {
             controller.showError("Enter a quiz title.");
             return;
         }
@@ -375,9 +381,9 @@ public class ClassroomPanel extends BaseScreen {
             return;
         }
 
-        String section = controller.getSession().getCurrentSection();
-        UserSession.TeacherQuiz quiz = new UserSession.TeacherQuiz(title, draftQuestions);
-        if (!controller.getSession().addTeacherQuiz(section, quiz)) {
+        String sectionName = controller.getSession().getCurrentSection();
+        UserSession.TeacherQuiz teacherQuiz = new UserSession.TeacherQuiz(quizTitle, draftQuestions);
+        if (!controller.getSession().addTeacherQuiz(sectionName, teacherQuiz)) {
             controller.showError("An activity with that title and question count already exists.");
             return;
         }
@@ -386,11 +392,11 @@ public class ClassroomPanel extends BaseScreen {
         draftQuestionModel.clear();
         quizTitleField.setText("");
         refresh();
-        controller.showAlert("Quiz published to Section " + section + ".");
+        controller.showAlert("Quiz published to Section " + sectionName + ".");
     }
 
     public void clearDraftQuiz() {
-        if (!isTeacher) return;
+        if (!teacherMode) return;
         draftQuestions.clear();
         draftQuestionModel.clear();
         quizTitleField.setText("");
@@ -398,30 +404,31 @@ public class ClassroomPanel extends BaseScreen {
 
     @Override
     public void refresh() {
-        UserSession session = controller.getSession();
-        String sec = session.getCurrentSection();
-        titleLabel.setText((isTeacher ? "Manage Class" : "Classroom") + " - " + sec);
+        UserSession userSession = controller.getSession();
+        String sectionName = userSession.getCurrentSection();
+        titleLabel.setText((teacherMode ? "Manage Class" : "Classroom") + " - " + sectionName);
 
-        DefaultListModel<String> model = session.getAssignmentsForSection(sec);
-        assignmentList.setModel(model);
-        if (!model.isEmpty() && assignmentList.getSelectedIndex() == -1) {
+        DefaultListModel<String> assignmentLabels =
+                userSession.getAssignmentsForSection(sectionName);
+        assignmentList.setModel(assignmentLabels);
+        if (!assignmentLabels.isEmpty() && assignmentList.getSelectedIndex() == -1) {
             assignmentList.setSelectedIndex(0);
         }
 
-        if (!isTeacher && leaderboardArea != null) {
+        if (!teacherMode && leaderboardArea != null) {
             refreshLeaderboard();
         }
     }
 
     private void refreshLeaderboard() {
-        UserSession session = controller.getSession();
-        String section = session.getCurrentSection();
-        List<UserSession.StudentRecord> students = session.getStudentsInSection(section);
-        ArrayList<PerformanceRecord> records = new ArrayList<>();
-        StringBuilder output = new StringBuilder();
+        UserSession userSession = controller.getSession();
+        String sectionName = userSession.getCurrentSection();
+        List<UserSession.StudentRecord> students = userSession.getStudentsInSection(sectionName);
+        ArrayList<PerformanceRecord> studentPerformanceRecords = new ArrayList<>();
+        StringBuilder leaderboardText = new StringBuilder();
 
         for (UserSession.StudentRecord student : students) {
-            records.add(new PerformanceRecord(
+            studentPerformanceRecords.add(new PerformanceRecord(
                     student.getName(),
                     student.getName(),
                     student.getCompletedQuizzes(),
@@ -429,50 +436,51 @@ public class ClassroomPanel extends BaseScreen {
                     0));
         }
 
-        if (records.isEmpty()) {
-            output.append("No students in this section yet.");
-            leaderboardArea.setText(output.toString());
+        if (studentPerformanceRecords.isEmpty()) {
+            leaderboardText.append("No students in this section yet.");
+            leaderboardArea.setText(leaderboardText.toString());
             leaderboardArea.setCaretPosition(0);
             return;
         }
 
         if (leaderboardSortBox != null) {
-            String criterion = (String) leaderboardSortBox.getSelectedItem();
-            String criterionName = "Completed Quizzes".equals(criterion)
+            String sortCriterion = (String) leaderboardSortBox.getSelectedItem();
+            String sortingCriterion = "Completed Quizzes".equals(sortCriterion)
                     ? SortingAlgorithm.CRITERIA_SCORE
                     : SortingAlgorithm.CRITERIA_XP;
 
-            String algorithmName = (String) leaderboardAlgorithmBox.getSelectedItem();
-            SortingAlgorithm algorithm;
-            if ("Bubble Sort".equals(algorithmName)) {
-                algorithm = new BubbleSortAdapter();
-            } else if ("Quick Sort".equals(algorithmName)) {
-                algorithm = new QuickSortAdapter();
+            String selectedAlgorithmName = (String) leaderboardAlgorithmBox.getSelectedItem();
+            SortingAlgorithm sortingAlgorithm;
+            if ("Bubble Sort".equals(selectedAlgorithmName)) {
+                sortingAlgorithm = new BubbleSortAdapter();
+            } else if ("Quick Sort".equals(selectedAlgorithmName)) {
+                sortingAlgorithm = new QuickSortAdapter();
             } else {
-                algorithm = new MergeSortAdapter();
+                sortingAlgorithm = new MergeSortAdapter();
             }
-            algorithm.sort(records, criterionName, false);
+            sortingAlgorithm.sort(studentPerformanceRecords, sortingCriterion, false);
 
             if (showLeaderboardMetrics) {
-                output.append("\n");
-                output.append("Algorithm: ").append(algorithm.getName()).append("\n");
-                output.append("Comparisons: ").append(algorithm.getComparisons()).append("\n");
-                output.append("Swaps/Moves: ").append(algorithm.getSwaps()).append("\n");
-                output.append(String.format("Time: %.3f ms",
-                        algorithm.getExecutionTime() / 1_000_000.0));
+                leaderboardText.append("\n");
+                leaderboardText.append("Algorithm: ").append(sortingAlgorithm.getName()).append("\n");
+                leaderboardText.append("Comparisons: ").append(sortingAlgorithm.getComparisons()).append("\n");
+                leaderboardText.append("Swaps/Moves: ").append(sortingAlgorithm.getSwaps()).append("\n");
+                leaderboardText.append(String.format("Time: %.3f ms",
+                        sortingAlgorithm.getExecutionTime() / 1_000_000.0));
 
-                output.append("\n\nAlgorithm Comparison:\n");
-                output.append(String.format("%-12s %12s %12s %10s%n",
+                leaderboardText.append("\n\nAlgorithm Comparison:\n");
+                leaderboardText.append(String.format("%-12s %12s %12s %10s%n",
                         "Algorithm", "Comparisons", "Swaps/Moves", "Time(ms)"));
-                SortingAlgorithm[] algorithms = {
+                SortingAlgorithm[] comparisonAlgorithms = {
                         new BubbleSortAdapter(),
                         new MergeSortAdapter(),
                         new QuickSortAdapter()
                 };
-                for (SortingAlgorithm benchmarkAlgorithm : algorithms) {
-                    ArrayList<PerformanceRecord> copy = new ArrayList<>(records);
-                    benchmarkAlgorithm.sort(copy, criterionName, false);
-                    output.append(String.format("%-12s %12d %12d %10.3f%n",
+                for (SortingAlgorithm benchmarkAlgorithm : comparisonAlgorithms) {
+                    ArrayList<PerformanceRecord> recordsToSort =
+                            new ArrayList<>(studentPerformanceRecords);
+                    benchmarkAlgorithm.sort(recordsToSort, sortingCriterion, false);
+                    leaderboardText.append(String.format("%-12s %12d %12d %10.3f%n",
                             benchmarkAlgorithm.getName(),
                             benchmarkAlgorithm.getComparisons(),
                             benchmarkAlgorithm.getSwaps(),
@@ -482,17 +490,17 @@ public class ClassroomPanel extends BaseScreen {
         }
 
         int rank = 1;
-        for (PerformanceRecord record : records) {
-            output.append(rank++)
-                    .append(". @").append(record.getUsername())
-                    .append(" - ").append(record.getTotalXp()).append(" XP")
-                    .append(" | Quizzes: ").append(record.getQuizScore())
+        for (PerformanceRecord studentRecord : studentPerformanceRecords) {
+            leaderboardText.append(rank++)
+                    .append(". @").append(studentRecord.getUsername())
+                    .append(" - ").append(studentRecord.getTotalXp()).append(" XP")
+                    .append(" | Quizzes: ").append(studentRecord.getQuizScore())
                     .append("\n");
         }
-        if (output.length() == 0) {
-            output.append("No students in this section yet.");
+        if (leaderboardText.length() == 0) {
+            leaderboardText.append("No students in this section yet.");
         }
-        leaderboardArea.setText(output.toString());
+        leaderboardArea.setText(leaderboardText.toString());
         leaderboardArea.setCaretPosition(0);
     }
 }

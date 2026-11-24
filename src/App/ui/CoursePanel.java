@@ -36,7 +36,7 @@ public class CoursePanel extends BaseScreen {
         }
     }
 
-    private final JPanel roadmap = new RoadmapList();
+    private final JPanel roadmapList = new RoadmapList();
     private final JLabel progressLabel = new JLabel();
 
     public CoursePanel(ApplicationController controller) {
@@ -65,37 +65,37 @@ public class CoursePanel extends BaseScreen {
         header.add(Box.createVerticalStrut(6));
         header.add(progressLabel);
 
-        roadmap.setLayout(new BoxLayout(roadmap, BoxLayout.Y_AXIS));
-        roadmap.setBackground(Theme.PALE_LIME);
+        roadmapList.setLayout(new BoxLayout(roadmapList, BoxLayout.Y_AXIS));
+        roadmapList.setBackground(Theme.PALE_LIME);
 
-        JScrollPane scroll = new JScrollPane(roadmap);
-        scroll.setBorder(null);
-        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        JScrollPane roadmapScrollPane = new JScrollPane(roadmapList);
+        roadmapScrollPane.setBorder(null);
+        roadmapScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        roadmapScrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         add(header, BorderLayout.NORTH);
-        add(scroll, BorderLayout.CENTER);
+        add(roadmapScrollPane, BorderLayout.CENTER);
         refresh();
     }
 
     @Override
     public void refresh() {
-        roadmap.removeAll();
-        UserSession session = controller.getSession();
-        CourseCatalog catalog = session.getCourseCatalog();
-        List<CourseCatalog.Lesson> lessons = catalog.getLessons(CourseCatalog.OOP_BASICS);
-        boolean started = session.hasStartedCourse(CourseCatalog.OOP_BASICS);
-        int completed = session.getCompletedCourseLessons(CourseCatalog.OOP_BASICS);
+        roadmapList.removeAll();
+        UserSession userSession = controller.getSession();
+        CourseCatalog courseCatalog = userSession.getCourseCatalog();
+        List<CourseCatalog.Lesson> lessons = courseCatalog.getLessons(CourseCatalog.OOP_BASICS);
+        boolean hasStartedRoadmap = userSession.hasStartedCourse(CourseCatalog.OOP_BASICS);
+        int completedLessonCount = userSession.getCompletedCourseLessons(CourseCatalog.OOP_BASICS);
 
-        progressLabel.setText(started
-                ? "Progress: " + completed + " of " + lessons.size() + " lessons"
+        progressLabel.setText(hasStartedRoadmap
+                ? "Progress: " + completedLessonCount + " of " + lessons.size() + " lessons"
                 : lessons.size() + "-lesson learning path - start with lesson 1");
 
-        for (int i = 0; i < lessons.size(); i++) {
-            final int lessonIndex = i;
-            CourseCatalog.Lesson lesson = lessons.get(i);
-            boolean isComplete = i < completed;
-            boolean isAvailable = i <= completed;
+        for (int lessonIndex = 0; lessonIndex < lessons.size(); lessonIndex++) {
+            final int selectedLessonIndex = lessonIndex;
+            CourseCatalog.Lesson lesson = lessons.get(lessonIndex);
+            boolean isLessonComplete = lessonIndex < completedLessonCount;
+            boolean isLessonAvailable = lessonIndex <= completedLessonCount;
 
             JPanel card = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
             card.setLayout(new BorderLayout(8, 6));
@@ -113,31 +113,32 @@ public class CoursePanel extends BaseScreen {
             summary.setOpaque(false);
             summary.setFocusable(false);
 
-            JPanel details = new JPanel(new BorderLayout(0, 4));
-            details.setOpaque(false);
-            details.add(title, BorderLayout.NORTH);
-            details.add(summary, BorderLayout.CENTER);
+            JPanel lessonDetails = new JPanel(new BorderLayout(0, 4));
+            lessonDetails.setOpaque(false);
+            lessonDetails.add(title, BorderLayout.NORTH);
+            lessonDetails.add(summary, BorderLayout.CENTER);
 
-            String buttonText = isComplete ? "REVIEW" : isAvailable
-                    ? (started ? "STUDY LESSON" : "START ROADMAP") : "LOCKED";
-            JButton lessonButton = Theme.createPrimaryButton(buttonText);
-            lessonButton.setEnabled(isAvailable);
-            lessonButton.addActionListener(e -> openLesson(lessonIndex, lessons.get(lessonIndex)));
+            String lessonButtonText = isLessonComplete ? "REVIEW" : isLessonAvailable
+                    ? (hasStartedRoadmap ? "STUDY LESSON" : "START ROADMAP") : "LOCKED";
+            JButton lessonButton = Theme.createPrimaryButton(lessonButtonText);
+            lessonButton.setEnabled(isLessonAvailable);
+            lessonButton.addActionListener(
+                    event -> openLesson(selectedLessonIndex, lesson));
 
-            card.add(details, BorderLayout.CENTER);
+            card.add(lessonDetails, BorderLayout.CENTER);
             card.add(lessonButton, BorderLayout.EAST);
             card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
-            roadmap.add(card);
-            roadmap.add(Box.createVerticalStrut(8));
+            roadmapList.add(card);
+            roadmapList.add(Box.createVerticalStrut(8));
         }
 
-        roadmap.revalidate();
-        roadmap.repaint();
+        roadmapList.revalidate();
+        roadmapList.repaint();
     }
 
     private void openLesson(int lessonIndex, CourseCatalog.Lesson lesson) {
-        UserSession session = controller.getSession();
-        session.startCourse(CourseCatalog.OOP_BASICS);
+        UserSession userSession = controller.getSession();
+        userSession.startCourse(CourseCatalog.OOP_BASICS);
         controller.showStudentScreen("COURSES");
 
         JPanel lessonContent = new JPanel();
@@ -162,6 +163,7 @@ public class CoursePanel extends BaseScreen {
         lessonContent.add(new JLabel("Example"));
         lessonContent.add(Box.createVerticalStrut(4));
         lessonContent.add(example);
+        Theme.applyTextStyling(lessonContent);
 
         JScrollPane lessonScroll = new JScrollPane(lessonContent);
         int dialogWidth = Math.max(240, Math.min(430, getWidth() - 40));
@@ -170,7 +172,7 @@ public class CoursePanel extends BaseScreen {
         JOptionPane.showMessageDialog(
                 this, lessonScroll, lesson.getTitle(), JOptionPane.INFORMATION_MESSAGE);
 
-        Object selected = JOptionPane.showInputDialog(
+        Object selectedAnswer = JOptionPane.showInputDialog(
                 this,
                 lesson.getCheckpoint(),
                 "Checkpoint",
@@ -178,16 +180,16 @@ public class CoursePanel extends BaseScreen {
                 null,
                 lesson.getChoices(),
                 lesson.getChoices()[0]);
-        if (selected == null) return;
+        if (selectedAnswer == null) return;
 
-        boolean correct = selected.toString().startsWith(lesson.getAnswer() + ")");
+        boolean correct = selectedAnswer.toString().startsWith(lesson.getCorrectAnswer() + ")");
         if (!correct) {
             controller.showAlert("Not quite. Review the lesson and try again.");
             return;
         }
 
-        if (lessonIndex == session.getCompletedCourseLessons(CourseCatalog.OOP_BASICS)) {
-            session.completeCourseLesson(CourseCatalog.OOP_BASICS, lessonIndex);
+        if (lessonIndex == userSession.getCompletedCourseLessons(CourseCatalog.OOP_BASICS)) {
+            userSession.completeCourseLesson(CourseCatalog.OOP_BASICS, lessonIndex);
         }
         controller.showAlert(lesson.getExplanation());
         controller.showStudentScreen("COURSES");

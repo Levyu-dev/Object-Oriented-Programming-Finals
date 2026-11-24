@@ -19,7 +19,7 @@ public class CourseCatalog {
         private final String example;
         private final String checkpoint;
         private final String[] choices;
-        private final String answer;
+        private final String correctAnswer;
         private final String explanation;
 
         private Lesson(
@@ -28,14 +28,14 @@ public class CourseCatalog {
                 String example,
                 String checkpoint,
                 String[] choices,
-                String answer,
+                String correctAnswer,
                 String explanation) {
             this.title = title;
             this.overview = overview;
             this.example = example;
             this.checkpoint = checkpoint;
             this.choices = choices.clone();
-            this.answer = answer;
+            this.correctAnswer = correctAnswer;
             this.explanation = explanation;
         }
 
@@ -44,7 +44,7 @@ public class CourseCatalog {
         public String getExample() { return example; }
         public String getCheckpoint() { return checkpoint; }
         public String[] getChoices() { return choices.clone(); }
-        public String getAnswer() { return answer; }
+        public String getCorrectAnswer() { return correctAnswer; }
         public String getExplanation() { return explanation; }
     }
 

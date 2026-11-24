@@ -1,13 +1,13 @@
 package App.model;
 
-public class MultipleChoiceQuestions extends Questions {
+public class MultipleChoiceQuestion extends QuizQuestion {
     private final String[] choices;
 
-    public MultipleChoiceQuestions(String questionText, String[] choices, String correctAnswer) {
+    public MultipleChoiceQuestion(String questionText, String[] choices, String correctAnswer) {
         this(questionText, choices, correctAnswer, 50);
     }
 
-    public MultipleChoiceQuestions(String questionText, String[] choices, String correctAnswer, int points) {
+    public MultipleChoiceQuestion(String questionText, String[] choices, String correctAnswer, int points) {
         super(questionText, correctAnswer, points);
         this.choices = choices.clone();
     }
@@ -17,7 +17,7 @@ public class MultipleChoiceQuestions extends Questions {
     }
 
     @Override
-    void showQuestion() {
+    void printQuestion() {
         System.out.println(questionText);
         for (String choice : choices) {
             System.out.println(choice);

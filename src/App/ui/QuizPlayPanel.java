@@ -2,9 +2,9 @@ package App.ui;
 
 import App.controller.ApplicationController;
 import App.model.QuizQuestionBank;
-import App.model.Questions;
-import App.model.MultipleChoiceQuestions;
-import App.model.IdentificationQuestions;
+import App.model.QuizQuestion;
+import App.model.MultipleChoiceQuestion;
+import App.model.ShortAnswerQuestion;
 import App.model.UserSession;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,29 +22,31 @@ public class QuizPlayPanel extends BaseScreen {
         PARTY
     }
 
-    private List<Questions> activeQuestions = new ArrayList<>();
-    private int currentIndex = 0;
+    private List<QuizQuestion> quizQuestions = new ArrayList<>();
+    private int currentQuestionIndex = 0;
     private int score = 0;
-    private int earnedXP = 0;
+    private int earnedExperiencePoints = 0;
 
     private JLabel progressLabel;
     private JLabel badgeLabel;
     private JTextArea questionArea;
-    private JPanel answerContainer;
-    private QuizMode mode = QuizMode.STANDARD;
+    private JPanel questionCard;
+    private JPanel quizContent;
+    private JPanel answerPanel;
+    private QuizMode quizMode = QuizMode.STANDARD;
     private javax.swing.Timer timedQuizTimer;
     private int secondsRemaining;
     private int bossHp = 100;
     private int playerHp = 100;
-    private final String[] partyPlayers = {"You", "Jumana", "Iyce"};
-    private int partyPlayerIndex;
+    private final String[] partyPlayerNames = {"You", "Jumana", "Iyce"};
+    private int currentPartyPlayerIndex;
     private String activeQuickPracticeTopic = "";
 
     public QuizPlayPanel(ApplicationController controller) {
         super(controller);
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(10, 0));
         setBackground(Theme.PALE_LIME);
-        setBorder(new EmptyBorder(14, 16, 14, 16));
+        setBorder(new EmptyBorder(10, 12, 10, 12));
 
         JPanel topPanel = new JPanel(new BorderLayout(4, 4));
         topPanel.setBackground(Theme.PALE_LIME);
@@ -60,70 +62,72 @@ public class QuizPlayPanel extends BaseScreen {
         topPanel.add(progressLabel, BorderLayout.NORTH);
         topPanel.add(badgeLabel, BorderLayout.SOUTH);
 
-        JPanel questionCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
+        questionCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 2);
         questionCard.setLayout(new BorderLayout());
 
-        questionArea = new JTextArea();
+        questionArea = new JTextArea(4, 40);
         questionArea.setEditable(false);
         questionArea.setLineWrap(true);
         questionArea.setWrapStyleWord(true);
         questionArea.setFont(new Font("Monospaced", Font.BOLD, 12));
         questionArea.setForeground(Theme.TEXT_DARK);
         questionArea.setBackground(Theme.SOFT_LIME_CARD);
+        questionArea.setBorder(new EmptyBorder(0, 2, 0, 2));
 
         JScrollPane scroll = new JScrollPane(questionArea);
         scroll.setBorder(null);
         scroll.getViewport().setBackground(Theme.SOFT_LIME_CARD);
         questionCard.add(scroll, BorderLayout.CENTER);
 
-        answerContainer = new JPanel(new BorderLayout());
-        answerContainer.setBackground(Theme.PALE_LIME);
-        answerContainer.setPreferredSize(new Dimension(0, 220));
-
-        add(topPanel, BorderLayout.NORTH);
-        add(questionCard, BorderLayout.CENTER);
-        add(answerContainer, BorderLayout.SOUTH);
+        quizContent = new JPanel();
+        quizContent.setLayout(new BoxLayout(quizContent, BoxLayout.Y_AXIS));
+        quizContent.setBackground(Theme.PALE_LIME);
+        quizContent.add(topPanel);
+        quizContent.add(questionCard);
+        quizContent.add(Box.createVerticalStrut(18));
+        add(quizContent, BorderLayout.NORTH);
     }
 
-    private List<Questions> buildTeammateQuestions() {
-        return new ArrayList<>(QuizQuestionBank.createQuestions());
+    private List<QuizQuestion> createStandardQuizQuestions() {
+        return new ArrayList<>(QuizQuestionBank.createCoreQuizQuestions());
     }
 
-    public void startQuiz(int count) {
-        mode = QuizMode.STANDARD;
+    public void startStandardQuiz(int questionCount) {
+        quizMode = QuizMode.STANDARD;
         activeQuickPracticeTopic = "";
-        startShuffledQuestions(count);
+        startShuffledQuiz(questionCount);
     }
 
-    public void startQuickPractice(String topic, int count) {
-        List<Questions> questions = QuizQuestionBank.createQuestions(topic);
-        if (questions.isEmpty()) {
+    public void startQuickPractice(String topic, int questionCount) {
+        List<QuizQuestion> topicQuestions = QuizQuestionBank.createQuestionsForTopic(topic);
+        if (topicQuestions.isEmpty()) {
             throw new IllegalArgumentException("Unknown quick-practice topic: " + topic);
         }
-        mode = QuizMode.QUICK_PRACTICE;
+        quizMode = QuizMode.QUICK_PRACTICE;
         activeQuickPracticeTopic = topic;
-        Collections.shuffle(questions);
-        int limit = Math.min(count, questions.size());
-        startQuestions(new ArrayList<>(questions.subList(0, limit)));
+        Collections.shuffle(topicQuestions);
+        int selectedQuestionCount = Math.min(questionCount, topicQuestions.size());
+        startQuizWithQuestions(new ArrayList<>(topicQuestions.subList(0, selectedQuestionCount)));
     }
 
-    private void startShuffledQuestions(int count) {
-        List<Questions> all = buildTeammateQuestions();
-        Collections.shuffle(all);
-        int limit = Math.min(count, all.size());
-        startQuestions(new ArrayList<>(all.subList(0, limit)));
+    private void startShuffledQuiz(int questionCount) {
+        List<QuizQuestion> availableQuestions = createStandardQuizQuestions();
+        Collections.shuffle(availableQuestions);
+        int selectedQuestionCount = Math.min(questionCount, availableQuestions.size());
+        startQuizWithQuestions(
+                new ArrayList<>(availableQuestions.subList(0, selectedQuestionCount)));
     }
 
-    public void startTimedQuiz(int count) {
-        mode = QuizMode.TIMED;
+    public void startTimedQuiz(int questionCount) {
+        quizMode = QuizMode.TIMED;
         activeQuickPracticeTopic = "";
         secondsRemaining = 60;
-        startShuffledQuestions(count);
+        startShuffledQuiz(questionCount);
         badgeLabel.setText("TIMED QUIZ - 60 seconds");
         if (timedQuizTimer != null) {
             timedQuizTimer.stop();
         }
-        timedQuizTimer = new javax.swing.Timer(1000, e -> {
+        timedQuizTimer = new javax.swing.Timer(1000, timerEvent -> {
             secondsRemaining--;
             if (secondsRemaining <= 0) {
                 timedQuizTimer.stop();
@@ -135,92 +139,103 @@ public class QuizPlayPanel extends BaseScreen {
         timedQuizTimer.start();
     }
 
-    public void startFinalBossQuiz(int count) {
-        mode = QuizMode.FINAL_BOSS;
+    public void startFinalBossQuiz(int questionCount) {
+        quizMode = QuizMode.FINAL_BOSS;
         activeQuickPracticeTopic = "";
         bossHp = 100;
         playerHp = 100;
-        startShuffledQuestions(count);
+        startShuffledQuiz(questionCount);
     }
 
-    public void startPartyQuiz(int count) {
-        mode = QuizMode.PARTY;
+    public void startPartyQuiz(int questionCount) {
+        quizMode = QuizMode.PARTY;
         activeQuickPracticeTopic = "";
-        partyPlayerIndex = 0;
-        startShuffledQuestions(count);
+        currentPartyPlayerIndex = 0;
+        startShuffledQuiz(questionCount);
     }
 
     public void startTeacherQuiz(UserSession.TeacherQuiz quiz) {
-        mode = QuizMode.STANDARD;
+        quizMode = QuizMode.STANDARD;
         activeQuickPracticeTopic = "";
-        List<Questions> questions = new ArrayList<>();
+        List<QuizQuestion> quizQuestions = new ArrayList<>();
         for (UserSession.TeacherQuestion question : quiz.getQuestions()) {
             if (question.getType() == UserSession.QuestionType.MULTIPLE_CHOICE) {
-                questions.add(new MultipleChoiceQuestions(
+                quizQuestions.add(new MultipleChoiceQuestion(
                         question.getPrompt(),
                         question.getChoices(),
                         question.getCorrectAnswer(),
                         question.getPoints()));
             } else {
-                questions.add(new IdentificationQuestions(
+                quizQuestions.add(new ShortAnswerQuestion(
                         question.getPrompt(),
                         question.getCorrectAnswer(),
                         question.getPoints()));
             }
         }
-        startQuestions(questions);
+        startQuizWithQuestions(quizQuestions);
     }
 
-    private void startQuestions(List<Questions> questions) {
+    private void startQuizWithQuestions(List<QuizQuestion> selectedQuestions) {
         if (timedQuizTimer != null) {
             timedQuizTimer.stop();
         }
-        activeQuestions = questions;
-        currentIndex = 0;
+        quizQuestions = selectedQuestions;
+        currentQuestionIndex = 0;
         score = 0;
-        earnedXP = 0;
+        earnedExperiencePoints = 0;
         refresh();
     }
 
     @Override
     public void refresh() {
-        if (activeQuestions.isEmpty()) {
+        if (quizQuestions.isEmpty()) {
             return;
         }
 
-        Questions q = activeQuestions.get(currentIndex);
-        progressLabel.setText("Question " + (currentIndex + 1) + " of " + activeQuestions.size() + "  |  Score: " + score);
-        String questionType = q instanceof MultipleChoiceQuestions ? "MULTIPLE CHOICE"
-                : q instanceof IdentificationQuestions ? "SHORT ANSWER"
-                : q.getClass().getSimpleName().replace("Questions", "").toUpperCase();
-        String modeLabel = mode == QuizMode.TIMED ? "TIMED"
-                : mode == QuizMode.FINAL_BOSS ? "FINAL BOSS"
-                : mode == QuizMode.PARTY ? "PARTY - " + partyPlayers[partyPlayerIndex]
-                : mode == QuizMode.QUICK_PRACTICE ? "QUICK PRACTICE - " + activeQuickPracticeTopic
+        QuizQuestion currentQuestion = quizQuestions.get(currentQuestionIndex);
+        progressLabel.setText("Question " + (currentQuestionIndex + 1) + " of "
+                + quizQuestions.size() + "  |  Score: " + score);
+        String questionType = currentQuestion instanceof MultipleChoiceQuestion ? "MULTIPLE CHOICE"
+                : currentQuestion instanceof ShortAnswerQuestion ? "SHORT ANSWER"
+                : currentQuestion.getClass().getSimpleName().replace("Question", "").toUpperCase();
+        String quizModeLabel = quizMode == QuizMode.TIMED ? "TIMED"
+                : quizMode == QuizMode.FINAL_BOSS ? "FINAL BOSS"
+                : quizMode == QuizMode.PARTY
+                        ? "PARTY - " + partyPlayerNames[currentPartyPlayerIndex]
+                : quizMode == QuizMode.QUICK_PRACTICE
+                        ? "QUICK PRACTICE - " + activeQuickPracticeTopic
                 : "OOP QUIZ";
-        if (mode == QuizMode.TIMED) {
-            badgeLabel.setText(modeLabel + " - " + secondsRemaining + " seconds");
-        } else if (mode == QuizMode.FINAL_BOSS) {
-            badgeLabel.setText(modeLabel + " - Boss " + bossHp + " HP / You " + playerHp + " HP");
+        if (quizMode == QuizMode.TIMED) {
+            badgeLabel.setText(quizModeLabel + " - " + secondsRemaining + " seconds");
+        } else if (quizMode == QuizMode.FINAL_BOSS) {
+            badgeLabel.setText(quizModeLabel + " - Boss " + bossHp + " HP / You " + playerHp + " HP");
         } else {
-            badgeLabel.setText(modeLabel + " - " + questionType + " - " + q.getPoints() + " POINTS");
+            badgeLabel.setText(quizModeLabel + " - " + questionType + " - " + currentQuestion.getPoints() + " POINTS");
         }
-        questionArea.setText(q.getQuestionText());
+        questionArea.setText(currentQuestion.getQuestionText());
         questionArea.setCaretPosition(0);
+        questionCard.setVisible(!currentQuestion.getQuestionText().trim().isEmpty());
 
-        answerContainer.removeAll();
+        if (answerPanel != null) {
+            quizContent.remove(answerPanel);
+        }
 
-        if (q instanceof MultipleChoiceQuestions) {
-            JPanel btnGrid = new JPanel(new GridLayout(4, 1, 0, 8));
-            btnGrid.setBackground(Theme.PALE_LIME);
+        if (currentQuestion instanceof MultipleChoiceQuestion) {
+            JPanel answerChoiceGrid = new JPanel(new GridLayout(4, 1, 0, 8));
+            answerChoiceGrid.setBackground(Theme.PALE_LIME);
 
-            for (String choice : ((MultipleChoiceQuestions) q).getChoices()) {
-                JButton btn = Theme.createPrimaryButton("<html><div style='width:240px;'>" + choice + "</div></html>");
-                String letter = choice.substring(0, 1);
-                btn.addActionListener(e -> submitAnswer(q, letter));
-                btnGrid.add(btn);
+            for (String choiceText : ((MultipleChoiceQuestion) currentQuestion).getChoices()) {
+                JButton answerButton = Theme.createPrimaryButton(
+                        "<html><div style='width:240px; text-align:left;'>"
+                                + choiceText + "</div></html>");
+                answerButton.setHorizontalAlignment(SwingConstants.LEFT);
+                answerButton.setMargin(new Insets(0, 12, 0, 12));
+                String answerLetter = choiceText.substring(0, 1);
+                answerButton.addActionListener(
+                        event -> submitAnswer(currentQuestion, answerLetter));
+                answerChoiceGrid.add(answerButton);
             }
-            answerContainer.add(btnGrid, BorderLayout.CENTER);
+            answerPanel = answerChoiceGrid;
         } else {
             JPanel inputBox = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
             inputBox.setLayout(new BorderLayout(8, 8));
@@ -233,46 +248,49 @@ public class QuizPlayPanel extends BaseScreen {
             Theme.styleTextField(answerField);
 
             JButton submitBtn = Theme.createPrimaryButton("SUBMIT ANSWER");
-            submitBtn.setPreferredSize(new Dimension(0, 42));
-            submitBtn.addActionListener(e -> submitAnswer(q, answerField.getText()));
+            submitBtn.addActionListener(
+                    event -> submitAnswer(currentQuestion, answerField.getText()));
 
             inputBox.add(prompt, BorderLayout.NORTH);
             inputBox.add(answerField, BorderLayout.CENTER);
             inputBox.add(submitBtn, BorderLayout.SOUTH);
-            answerContainer.add(inputBox, BorderLayout.CENTER);
+            answerPanel = inputBox;
         }
 
-        answerContainer.revalidate();
-        answerContainer.repaint();
+        quizContent.add(answerPanel);
+        quizContent.revalidate();
+        revalidate();
+        repaint();
     }
 
-    private void submitAnswer(Questions question, String userAnswer) {
+    private void submitAnswer(QuizQuestion question, String userAnswer) {
         boolean correct = question.checkAnswer(userAnswer);
         if (correct) {
             score++;
-            earnedXP += question.getPoints();
+            earnedExperiencePoints += question.getPoints();
             controller.showAlert("Correct! (+" + question.getPoints() + " points)");
-            if (mode == QuizMode.FINAL_BOSS) {
+            if (quizMode == QuizMode.FINAL_BOSS) {
                 bossHp = Math.max(0, bossHp - 20);
             }
         } else {
             controller.showError("Wrong Answer! The correct answer is: " + question.getCorrectAnswer());
-            if (mode == QuizMode.FINAL_BOSS) {
+            if (quizMode == QuizMode.FINAL_BOSS) {
                 playerHp = Math.max(0, playerHp - 15);
             }
         }
 
-        if (mode == QuizMode.PARTY) {
-            partyPlayerIndex = (partyPlayerIndex + 1) % partyPlayers.length;
+        if (quizMode == QuizMode.PARTY) {
+            currentPartyPlayerIndex =
+                    (currentPartyPlayerIndex + 1) % partyPlayerNames.length;
         }
 
-        if (mode == QuizMode.FINAL_BOSS && (bossHp == 0 || playerHp == 0)) {
+        if (quizMode == QuizMode.FINAL_BOSS && (bossHp == 0 || playerHp == 0)) {
             finishQuiz(bossHp == 0 ? "You defeated the final boss!" : "The boss defeated you!");
             return;
         }
 
-        currentIndex++;
-        if (currentIndex < activeQuestions.size()) {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizQuestions.size()) {
             refresh();
             return;
         }
@@ -280,13 +298,13 @@ public class QuizPlayPanel extends BaseScreen {
         finishQuiz("Quiz complete!");
     }
 
-    private void finishQuiz(String prefix) {
+    private void finishQuiz(String resultMessage) {
         if (timedQuizTimer != null) {
             timedQuizTimer.stop();
         }
-        controller.getSession().addXP(earnedXP);
-        controller.showAlert(prefix + "\nYour Final Score: " + score + "/" + activeQuestions.size()
-                + "\nEarned: +" + earnedXP + " points");
+        controller.getSession().addExperiencePoints(earnedExperiencePoints);
+        controller.showAlert(resultMessage + "\nYour Final Score: " + score + "/" + quizQuestions.size()
+                + "\nEarned: +" + earnedExperiencePoints + " points");
         controller.showStudentScreen("STUDENT_DASH");
     }
 }

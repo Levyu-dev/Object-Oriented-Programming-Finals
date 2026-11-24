@@ -21,87 +21,122 @@ public class PracticePanel extends BaseScreen {
         header.setFont(new Font(Theme.UI_FONT, Font.BOLD, 20));
         header.setForeground(Theme.TEXT_DARK);
 
-        JPanel center = new JPanel();
-        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
-        center.setBackground(Theme.PALE_LIME);
+        JPanel practiceContent = new JPanel();
+        practiceContent.setLayout(new BoxLayout(practiceContent, BoxLayout.Y_AXIS));
+        practiceContent.setBackground(Theme.PALE_LIME);
+        header.setHorizontalAlignment(SwingConstants.CENTER);
+        header.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel topicLabel = new JLabel("Choose a topic:");
         topicLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 13));
         topicLabel.setForeground(Theme.TEXT_DARK);
-        topicLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        topicLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        topicLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel topicGrid = new JPanel(new GridLayout(3, 2, 8, 8));
+        JPanel topicGrid = new JPanel(new GridLayout(3, 2, 15, 10));
         topicGrid.setBackground(Theme.PALE_LIME);
-        topicGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
+        topicGrid.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         List<String> topics = QuizQuestionBank.getQuickPracticeTopics();
         List<JButton> topicButtons = new ArrayList<>();
-        String[] selectedTopic = {topics.get(0)};
+        String[] selectedTopicName = {topics.get(0)};
 
         JLabel questionCountLabel = new JLabel();
         questionCountLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 12));
         questionCountLabel.setForeground(Theme.TEXT_DARK);
+        questionCountLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        questionCountLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JTextField countField = new JTextField("5");
         Theme.styleTextField(countField);
+        countField.setHorizontalAlignment(SwingConstants.CENTER);
+        Dimension countFieldSize = countField.getPreferredSize();
+        countField.setPreferredSize(new Dimension(countFieldSize.width, 38));
+        countField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        countField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         for (String topic : topics) {
             JButton topicButton = Theme.createPrimaryButton(topic);
             topicButtons.add(topicButton);
-            if (topic.equals(selectedTopic[0])) {
+            if (topic.equals(selectedTopicName[0])) {
                 topicButton.setBackground(Theme.BRIGHT_LIME);
                 topicButton.setForeground(Theme.TEXT_DARK);
             }
-            topicButton.addActionListener(e -> {
-                selectedTopic[0] = topic;
+            topicButton.addActionListener(event -> {
+                selectedTopicName[0] = topic;
                 for (JButton button : topicButtons) {
                     button.setBackground(Theme.DEEP_TEAL);
                     button.setForeground(Theme.WHITE);
                 }
                 topicButton.setBackground(Theme.BRIGHT_LIME);
                 topicButton.setForeground(Theme.TEXT_DARK);
-                questionCountLabel.setText(questionCountText(topic));
+                questionCountLabel.setText(formatQuestionCount(topic));
             });
             topicGrid.add(topicButton);
         }
 
-        questionCountLabel.setText(questionCountText(selectedTopic[0]));
-        JPanel optionsCard = Theme.createRoundedCard(Theme.SOFT_LIME_CARD, 12);
-        optionsCard.setLayout(new GridLayout(2, 1, 8, 8));
+        questionCountLabel.setText(formatQuestionCount(selectedTopicName[0]));
+        int controlHorizontalInset = 12;
+        JPanel optionsCard = Theme.createRoundedCard(
+                Theme.SOFT_LIME_CARD, controlHorizontalInset);
+        optionsCard.setLayout(new BoxLayout(optionsCard, BoxLayout.Y_AXIS));
+        optionsCard.setAlignmentX(Component.CENTER_ALIGNMENT);
         optionsCard.add(questionCountLabel);
+        optionsCard.add(Box.createVerticalStrut(10));
         optionsCard.add(countField);
-        optionsCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        optionsCard.setMaximumSize(
+                new Dimension(Integer.MAX_VALUE, optionsCard.getPreferredSize().height));
 
-        center.add(topicLabel);
-        center.add(Box.createVerticalStrut(8));
-        center.add(topicGrid);
-        center.add(Box.createVerticalStrut(12));
-        center.add(optionsCard);
+        JPanel topicGridContainer = new JPanel(new BorderLayout());
+        topicGridContainer.setOpaque(false);
+        topicGridContainer.setBorder(
+                new EmptyBorder(0, controlHorizontalInset, 0, controlHorizontalInset));
+        topicGridContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+        topicGridContainer.add(topicGrid, BorderLayout.CENTER);
+        topicGridContainer.setMaximumSize(
+                new Dimension(Integer.MAX_VALUE, topicGridContainer.getPreferredSize().height));
 
-        JButton startBtn = Theme.createPrimaryButton("START PRACTICE");
-        startBtn.setPreferredSize(new Dimension(0, 44));
-        startBtn.addActionListener(e -> {
+        JButton startPracticeButton = Theme.createPrimaryButton("START PRACTICE");
+        startPracticeButton.setPreferredSize(new Dimension(0, 44));
+        startPracticeButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+        startPracticeButton.addActionListener(event -> {
             try {
-                int count = Integer.parseInt(countField.getText().trim());
-                int maxQuestions = QuizQuestionBank.getQuickPracticeQuestionCount(selectedTopic[0]);
-                if (count < 1 || count > maxQuestions) {
+                int questionCount = Integer.parseInt(countField.getText().trim());
+                int maximumQuestionCount =
+                        QuizQuestionBank.getQuickPracticeQuestionCount(selectedTopicName[0]);
+                if (questionCount < 1 || questionCount > maximumQuestionCount) {
                     throw new InvalidMenuChoiceException(
-                            "Enter a number from 1 to " + maxQuestions + ".");
+                            "Enter a number from 1 to " + maximumQuestionCount + ".");
                 }
-                controller.launchQuickPractice(selectedTopic[0], count);
-            } catch (NumberFormatException ex) {
+                controller.launchQuickPractice(selectedTopicName[0], questionCount);
+            } catch (NumberFormatException numberFormatException) {
                 controller.showError("Please type a valid number!");
-            } catch (InvalidMenuChoiceException ex) {
-                controller.showError(ex.getMessage());
+            } catch (InvalidMenuChoiceException invalidChoiceException) {
+                controller.showError(invalidChoiceException.getMessage());
             }
         });
 
-        add(header, BorderLayout.NORTH);
-        add(center, BorderLayout.CENTER);
-        add(startBtn, BorderLayout.SOUTH);
+        JPanel startButtonContainer = new JPanel(new BorderLayout());
+        startButtonContainer.setOpaque(false);
+        startButtonContainer.setBorder(
+                new EmptyBorder(0, controlHorizontalInset, 0, controlHorizontalInset));
+        startButtonContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+        startButtonContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+        startButtonContainer.add(startPracticeButton, BorderLayout.CENTER);
+
+        practiceContent.add(header);
+        practiceContent.add(Box.createVerticalStrut(16));
+        practiceContent.add(topicLabel);
+        practiceContent.add(Box.createVerticalStrut(8));
+        practiceContent.add(topicGridContainer);
+        practiceContent.add(Box.createVerticalStrut(12));
+        practiceContent.add(optionsCard);
+        practiceContent.add(Box.createVerticalStrut(12));
+        practiceContent.add(startButtonContainer);
+        add(practiceContent, BorderLayout.NORTH);
     }
 
-    private String questionCountText(String topic) {
+    private String formatQuestionCount(String topic) {
         return "Questions (1-" + QuizQuestionBank.getQuickPracticeQuestionCount(topic) + "):";
     }
 
