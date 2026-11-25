@@ -37,6 +37,8 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
     };
     private final JComboBox<String> sortCriterionBox =
             new JComboBox<>(new String[]{"Quiz Score", "XP", "Accuracy"});
+    private final JComboBox<String> sortOrderBox =
+            new JComboBox<>(new String[]{"Descending", "Ascending"});
     private final JLabel benchmarkSummaryLabel = new JLabel();
     private int selectedDatasetSize = 100;
 
@@ -98,7 +100,13 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
         sortCriterionBox.addActionListener(event -> refreshBenchmark());
         criterionControls.add(criterionLabel);
         criterionControls.add(sortCriterionBox);
-        criterionControls.add(new JLabel("Descending"));
+        JLabel orderLabel = new JLabel("Order:");
+        orderLabel.setFont(new Font(Theme.UI_FONT, Font.BOLD, 13));
+        orderLabel.setForeground(Theme.TEXT_DARK);
+        Theme.styleComboBox(sortOrderBox);
+        sortOrderBox.addActionListener(event -> refreshBenchmark());
+        criterionControls.add(orderLabel);
+        criterionControls.add(sortOrderBox);
 
         controls.add(sizeControls);
         controls.add(Box.createVerticalStrut(10));
@@ -186,10 +194,12 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
 
     private void refreshBenchmark() {
         String criterion = getSortCriterion();
+        boolean ascending = "Ascending".equals(sortOrderBox.getSelectedItem());
         benchmarkSummaryLabel.setText(
                 "Results for " + selectedDatasetSize + " random records across "
                         + BENCHMARK_TRIALS + " seeded trials, sorted by "
-                        + sortCriterionBox.getSelectedItem() + " (descending)");
+                        + sortCriterionBox.getSelectedItem() + " ("
+                        + (ascending ? "ascending" : "descending") + ")");
         resultsModel.setRowCount(0);
 
         SortingAlgorithm[] algorithms = {
@@ -216,9 +226,9 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
             for (int algorithmIndex = 0; algorithmIndex < algorithms.length; algorithmIndex++) {
                 SortingAlgorithm algorithm = algorithms[algorithmIndex];
                 List<PerformanceRecord> sortedRecords = copyRecords(records);
-                algorithm.sort(sortedRecords, criterion, false);
+                algorithm.sort(sortedRecords, criterion, ascending);
                 double[] sortedValues = extractValues(algorithm, sortedRecords, criterion);
-                correct &= isSorted(sortedValues, false)
+                correct &= isSorted(sortedValues, ascending)
                         && (referenceValues == null
                                 || Arrays.equals(referenceValues, sortedValues));
                 if (referenceValues == null) {
@@ -232,7 +242,7 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
             }
         }
 
-        printBenchmarkBreakdown(algorithms, executionTimes, comparisons, swaps);
+        printBenchmarkBreakdown(algorithms, executionTimes, comparisons, swaps, ascending);
         for (int algorithmIndex = 0; algorithmIndex < algorithms.length; algorithmIndex++) {
             resultsModel.addRow(new Object[]{
                     algorithms[algorithmIndex].getName(),
@@ -243,7 +253,7 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
             });
         }
 
-        new MergeSortAdapter().sort(leaderboardRecords, criterion, false);
+        new MergeSortAdapter().sort(leaderboardRecords, criterion, ascending);
         Object[][] leaderboardRows = new Object[leaderboardRecords.size()][6];
         for (int index = 0; index < leaderboardRecords.size(); index++) {
             PerformanceRecord record = leaderboardRecords.get(index);
@@ -292,12 +302,14 @@ public class AlgorithmBenchmarkPanel extends BaseScreen {
             SortingAlgorithm[] algorithms,
             long[][] executionTimes,
             long[][] comparisons,
-            long[][] swaps) {
+            long[][] swaps,
+            boolean ascending) {
         System.out.printf(
                 Locale.ROOT,
-                "%n5-Run Benchmark Breakdown | Dataset: %d | Criterion: %s | Descending%n",
+                "%n5-Run Benchmark Breakdown | Dataset: %d | Criterion: %s | %s%n",
                 selectedDatasetSize,
-                sortCriterionBox.getSelectedItem());
+                sortCriterionBox.getSelectedItem(),
+                ascending ? "Ascending" : "Descending");
         System.out.println("Run\tSeed\tAlgorithm\tTime (ms)\tComparisons\tSwaps / Moves");
         for (int trialIndex = 0; trialIndex < BENCHMARK_TRIALS; trialIndex++) {
             long seed = AlgorithmDataset.DEFAULT_DATASET_SEED + trialIndex + 1;
