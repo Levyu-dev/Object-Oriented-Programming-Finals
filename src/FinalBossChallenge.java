@@ -30,8 +30,7 @@ public class FinalBossChallenge extends Quiz {
         lives = startingLives;
         victory = false;
 
-        List<Questions> pool = new ArrayList<>(questions);
-        Collections.shuffle(pool);
+        List<Questions> pool = getShuffledQuestions(); 
 
         System.out.println("\n=== FINAL BOSS MODE ===");
         System.out.println("A wild " + bossName + " appears!");
@@ -72,8 +71,7 @@ public class FinalBossChallenge extends Quiz {
         } else {
             System.out.println("You ran out of questions and " + bossName + " is still standing!");
         }
-        System.out.println("Correct answers: " + getScore() + "/" + getAttempts());
-        System.out.println("XP Earned: " + getXpEarned());
+        getResult().display(); 
     }
 
     @Override

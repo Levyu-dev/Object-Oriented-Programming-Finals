@@ -24,7 +24,7 @@ public class TimedQuiz extends Quiz {
         System.out.println("\n=== " + getModeName() + " (TIMED) ===");
         System.out.println("You have " + timeLimitSeconds + " seconds. Go!");
 
-        for (Questions q : questions) {
+        for (Questions q : getShuffledQuestions()) { //new code line
             long remaining = limitMs - (System.currentTimeMillis() - start);
             if (remaining <= 0) {
                 System.out.println("\nTIME'S UP!");

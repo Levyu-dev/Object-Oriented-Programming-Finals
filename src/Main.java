@@ -7,12 +7,10 @@ public class Main {
         List<Questions> bank = loadQuestions();
         boolean running = true;
 
-        System.out.println("---");
         System.out.println("  CODING PRACTICE PLATFORM  ");
-        System.out.println("---");
 
         while (running) {
-            System.out.println("\n--- MAIN MENU ---");
+            System.out.println("\n MAIN MENU ");
             System.out.println("1. Standard Quiz");
             System.out.println("2. Timed Quiz");
             System.out.println("3. Final Boss Mode");
@@ -26,19 +24,19 @@ public class Main {
                     case "1": {
                         Quiz quiz = new Quiz("Standard Quiz");
                         quiz.addAll(bank);
-                        quiz.play(input);
+                        runQuiz(quiz, input); 
                         break;
                     }
                     case "2": {
                         TimedQuiz timed = new TimedQuiz("Timed Quiz", 90);
                         timed.addAll(bank);
-                        timed.play(input);
+                        runQuiz(timed, input); 
                         break;
                     }
                     case "3": {
                         FinalBossChallenge boss = new FinalBossChallenge("The Null Pointer", 100, 20, 3);
                         boss.addAll(bank);
-                        boss.play(input);
+                        runQuiz(boss, input); 
                         break;
                     }
                     case "4": {
@@ -78,6 +76,24 @@ public class Main {
         }
         input.close();
     }
+
+    private static void runQuiz(Quiz quiz, Scanner input) {
+        boolean again; 
+        do { 
+            quiz.play(input); 
+            saveResult(quiz); 
+            System.out.print("Retry? (y/n): "); 
+            again = input.nextLine().trim().equalsIgnoreCase("y"); 
+        } while (again); 
+    } 
+
+    //  this is where Iyce's Student.recordQuizResult gets called
+    private static void saveResult(Quiz quiz) { 
+        if (!quiz.claimResult()) return; 
+        QuizResult r = quiz.getResult(); 
+        System.out.println("(Result recorded once: " + r.getCorrect() + "/" + r.getAnswered() 
+                + " correct, +" + r.getXpEarned() + " XP)"); 
+    } 
 
     private static List<Questions> loadQuestions() {
         List<Questions> bank = new ArrayList<>();
