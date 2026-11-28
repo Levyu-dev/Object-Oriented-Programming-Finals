@@ -32,7 +32,7 @@ public class FinalBossChallenge extends Quiz {
 
         List<Questions> pool = getShuffledQuestions(); 
 
-        System.out.println("\n=== FINAL BOSS MODE ===");
+        System.out.println("\nFINAL BOSS MODE ");
         System.out.println("A wild " + bossName + " appears!");
         System.out.println("Answer correctly to attack. Wrong answers cost you a life.");
 
@@ -63,7 +63,7 @@ public class FinalBossChallenge extends Quiz {
 
     @Override
     protected void showSummary() {
-        System.out.println("\n--- Boss Battle Over! ---");
+        System.out.println("\nBoss Battle Over! ");
         if (victory) {
             System.out.println("VICTORY! You defeated " + bossName + "!");
         } else if (lives <= 0) {
